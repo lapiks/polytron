@@ -4,8 +4,11 @@ use crate::graphics::Graphics;
 
 /// The console renderer
 pub struct Renderer {
-    pipeline: Pipeline,
-    bindings: Option<Bindings>,
+    display_pipeline: Pipeline,
+    display_bind: Bindings,
+    offscreen_pipeline: Pipeline,
+    offscreen_bind: Option<Bindings>,
+    offscreen_pass: RenderPass,
     ctx: Box<dyn RenderingBackend>,
 }
 
@@ -13,29 +16,94 @@ impl Renderer {
     pub fn new() -> Renderer {
         let mut ctx: Box<dyn RenderingBackend> = window::new_rendering_backend();
 
-        let shader = ctx
+        let color_img = ctx.new_render_texture(TextureParams {
+            width: 320,
+            height: 200,
+            format: TextureFormat::RGBA8,
+            min_filter: FilterMode::Nearest,
+            mag_filter: FilterMode::Nearest,
+            ..Default::default()
+        });
+        let depth_img = ctx.new_render_texture(TextureParams {
+            width: 320,
+            height: 200,
+            format: TextureFormat::Depth,
+            ..Default::default()
+        });
+
+        // offscreen
+        let offscreen_pass = ctx.new_render_pass(color_img, Some(depth_img));
+
+        let offscreen_shader = ctx
             .new_shader(
                 ShaderSource::Glsl {
-                    vertex: shader::VERTEX,
-                    fragment: shader::FRAGMENT,
+                    vertex: offscreen_shader::VERTEX,
+                    fragment: offscreen_shader::FRAGMENT,
                 },
-                shader::meta(),
+                offscreen_shader::meta(),
             )
             .unwrap();
 
-        let pipeline = ctx.new_pipeline(
+        let offscreen_pipeline = ctx.new_pipeline(
             &[BufferLayout::default()],
             &[
                 VertexAttribute::new("in_pos", VertexFormat::Float3),
                 VertexAttribute::new("in_color", VertexFormat::Float4),
                 VertexAttribute::new("in_normal", VertexFormat::Float3),
             ],
-            shader,
+            offscreen_shader,
+        );
+
+        // display pass
+        let quad_vertices = [
+            -1.0, -1.0, 0.0, 0.0,
+            -1.0, 1.0, 0.0, 1.0,
+            1.0, -1.0, 1.0, 0.0,
+            1.0, 1.0, 1.0, 1.0
+        ] as [f32; 16];
+        let quad_vertex_buffer = ctx.new_buffer(
+            BufferType::VertexBuffer,
+            BufferUsage::Immutable,
+            BufferSource::slice(&quad_vertices),
+        );
+
+        let quad_index_buffer = ctx.new_buffer(
+            BufferType::IndexBuffer,
+            BufferUsage::Immutable,
+            BufferSource::slice(&[0, 1, 2, 2, 1, 3]),
+        );
+
+        let display_bind = Bindings {
+            vertex_buffers: vec![quad_vertex_buffer],
+            index_buffer: quad_index_buffer,
+            images: vec![color_img],
+        };
+
+        let display_shader = ctx
+        .new_shader(
+            ShaderSource::Glsl {
+                vertex: display_shader::VERTEX,
+                fragment: display_shader::FRAGMENT,
+            },
+            display_shader::meta(),
+        )
+        .unwrap();
+
+        let display_pipeline = ctx.new_pipeline(
+            &[BufferLayout::default()],
+            &[
+                VertexAttribute::new("in_pos", VertexFormat::Float2),
+                VertexAttribute::new("in_uv", VertexFormat::Float2),
+            ],
+            display_shader,
         );
 
         Renderer {
-            pipeline,
-            bindings: None,
+            display_pipeline,
+            display_bind,
+            offscreen_pipeline,
+            offscreen_bind: None,
+            offscreen_pass,
             ctx,
         }
     }
@@ -59,7 +127,7 @@ impl Renderer {
             BufferSource::slice(&indices),
         );
         
-        self.bindings = Some(
+        self.offscreen_bind = Some(
             Bindings {
                 vertex_buffers: vertex_buffers,
                 index_buffer: index_buffer,
@@ -69,23 +137,34 @@ impl Renderer {
     }
 
     pub fn draw(&mut self) {
-        match &self.bindings {
-            Some(bindings) => {
+        match &self.offscreen_bind {
+            Some(offscreen_bind) => {
+                // offscreen pass
+                self.ctx.begin_pass(
+                    Some(self.offscreen_pass),
+                    PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
+                );
+                self.ctx.apply_pipeline(&self.offscreen_pipeline);
+                self.ctx.apply_bindings(offscreen_bind);
+                self.ctx.draw(0, 3, 1);
+                self.ctx.end_render_pass();
+
+                // display pass
                 self.ctx.begin_default_pass(Default::default());
 
-                self.ctx.apply_pipeline(&self.pipeline);
-                self.ctx.apply_bindings(bindings);
-                self.ctx.draw(0, 3, 1);
+                self.ctx.apply_pipeline(&self.display_pipeline);
+                self.ctx.apply_bindings(&self.display_bind);
+                self.ctx.draw(0, 6, 1);
                 self.ctx.end_render_pass();
         
                 self.ctx.commit_frame();
             },
-            None => println!("Error: no bindings"),
+            None => println!("Error: no offscreen_bind"),
         }        
     }
 }
 
-mod shader {
+mod offscreen_shader {
     use miniquad::*;
 
     pub const VERTEX: &str = r#"#version 100
@@ -95,7 +174,7 @@ mod shader {
     varying lowp vec4 color;
 
     void main() {
-        gl_Position = vec4(in_pos, 1);
+        gl_Position = vec4(in_pos, 1.0);
         color = in_color;
     }"#;
 
@@ -109,6 +188,37 @@ mod shader {
     pub fn meta() -> ShaderMeta {
         ShaderMeta {
             images: vec![],
+            uniforms: UniformBlockLayout { uniforms: vec![] },
+        }
+    }
+}
+
+mod display_shader {
+    use miniquad::*;
+
+    pub const VERTEX: &str = r#"#version 100
+    attribute vec2 in_pos;
+    attribute vec2 in_uv;
+
+    varying lowp vec2 uv;
+
+    void main() {
+        gl_Position = vec4(in_pos, 0.0, 1.0);
+        uv = in_uv;
+    }"#;
+
+    pub const FRAGMENT: &str = r#"#version 100
+    varying lowp vec2 uv;
+
+    uniform sampler2D tex;
+
+    void main() {
+        gl_FragColor = texture2D(tex, uv);
+    }"#;
+
+    pub fn meta() -> ShaderMeta {
+        ShaderMeta {
+            images: vec!["tex".to_string()],
             uniforms: UniformBlockLayout { uniforms: vec![] },
         }
     }
