@@ -1,6 +1,6 @@
 use miniquad::EventHandler;
 
-use crate::renderer::Renderer;
+use crate::{renderer::Renderer, game::Game, graphics::Graphics};
 
 // The Polytron console
 pub struct Console {
@@ -31,6 +31,8 @@ impl EventHandler for Console {
     }
 
     fn draw(&mut self) {
+        let game = Game {};
+        self.renderer.prepare(game.draw(Graphics::new()));
         self.renderer.draw();
     }
 }

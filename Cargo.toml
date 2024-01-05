@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 miniquad = "0.4.0-alpha.10"
+glam = "0.25.0"
