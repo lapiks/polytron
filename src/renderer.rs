@@ -7,7 +7,6 @@ pub struct Renderer {
     display_pipeline: Pipeline,
     display_bind: Bindings,
     offscreen_pipeline: Pipeline,
-    offscreen_bind: Option<Bindings>,
     offscreen_pass: RenderPass,
     ctx: Box<dyn RenderingBackend>,
 }
@@ -102,65 +101,63 @@ impl Renderer {
             display_pipeline,
             display_bind,
             offscreen_pipeline,
-            offscreen_bind: None,
             offscreen_pass,
             ctx,
         }
     }
 
     pub fn prepare(&mut self, graphics: Graphics) {
-        let mut vertex_buffers = Vec::new();
-        for shape in graphics.shapes {
-            vertex_buffers.push(
-                self.ctx.new_buffer(
-                    BufferType::VertexBuffer,
-                    BufferUsage::Immutable,
-                    BufferSource::slice(&shape.vertices),
-                )
-            );
-        }
-
-        let indices: [u16; 3] = [0, 1, 2];
-        let index_buffer = self.ctx.new_buffer(
-            BufferType::IndexBuffer,
-            BufferUsage::Immutable,
-            BufferSource::slice(&indices),
-        );
         
-        self.offscreen_bind = Some(
-            Bindings {
-                vertex_buffers: vertex_buffers,
-                index_buffer: index_buffer,
-                images: vec![],
-            }
-        );
     }
 
-    pub fn draw(&mut self) {
-        match &self.offscreen_bind {
-            Some(offscreen_bind) => {
-                // offscreen pass
-                self.ctx.begin_pass(
-                    Some(self.offscreen_pass),
-                    PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
-                );
-                self.ctx.apply_pipeline(&self.offscreen_pipeline);
-                self.ctx.apply_bindings(offscreen_bind);
-                self.ctx.draw(0, 3, 1);
-                self.ctx.end_render_pass();
+    pub fn draw(&mut self, graphics: Graphics) {
+        // offscreen pass
+        self.ctx.begin_pass(
+            Some(self.offscreen_pass),
+            PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
+        );
 
-                // display pass
-                self.ctx.begin_default_pass(Default::default());
+        for shape in graphics.shapes {
+            let vertex_buffer = self.ctx.new_buffer(
+                BufferType::VertexBuffer,
+                BufferUsage::Immutable,
+                BufferSource::slice(&shape.vertices),
+            );
 
-                self.ctx.apply_pipeline(&self.display_pipeline);
-                self.ctx.apply_bindings(&self.display_bind);
-                self.ctx.draw(0, 6, 1);
-                self.ctx.end_render_pass();
+            let index_buffer = self.ctx.new_buffer(
+                BufferType::IndexBuffer,
+                BufferUsage::Immutable,
+                BufferSource::slice(&[0, 1, 2]),
+            );
+
+            let offscreen_bind = Bindings {
+                vertex_buffers: vec![vertex_buffer],
+                index_buffer: index_buffer,
+                images: vec![],
+            };
+
+            let vs_params = offscreen_shader::Uniforms {
+                mvp: shape.mvp,
+            };
+
+            self.ctx.apply_pipeline(&self.offscreen_pipeline);
+            self.ctx.apply_bindings(&offscreen_bind);
+            self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
+            self.ctx.draw(0, 3, 1);
+        }
+
+        self.ctx.end_render_pass();
         
-                self.ctx.commit_frame();
-            },
-            None => println!("Error: no offscreen_bind"),
-        }        
+
+        // display pass
+        self.ctx.begin_default_pass(Default::default());
+
+        self.ctx.apply_pipeline(&self.display_pipeline);
+        self.ctx.apply_bindings(&self.display_bind);
+        self.ctx.draw(0, 6, 1);
+        self.ctx.end_render_pass();
+
+        self.ctx.commit_frame();
     }
 }
 
@@ -171,10 +168,12 @@ mod offscreen_shader {
     attribute vec3 in_pos;
     attribute vec4 in_color;
 
+    uniform mat4 mvp;
+
     varying lowp vec4 color;
 
     void main() {
-        gl_Position = vec4(in_pos, 1.0);
+        gl_Position = mvp * vec4(in_pos, 1.0);
         color = in_color;
     }"#;
 
@@ -188,8 +187,15 @@ mod offscreen_shader {
     pub fn meta() -> ShaderMeta {
         ShaderMeta {
             images: vec![],
-            uniforms: UniformBlockLayout { uniforms: vec![] },
+            uniforms: UniformBlockLayout {
+                uniforms: vec![UniformDesc::new("mvp", UniformType::Mat4)],
+            },
         }
+    }
+
+    #[repr(C)]
+    pub struct Uniforms {
+        pub mvp: glam::Mat4,
     }
 }
 

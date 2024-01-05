@@ -32,7 +32,6 @@ impl EventHandler for Console {
 
     fn draw(&mut self) {
         let game = Game {};
-        self.renderer.prepare(game.draw(Graphics::new()));
-        self.renderer.draw();
+        self.renderer.draw(game.draw(Graphics::new()));
     }
 }
