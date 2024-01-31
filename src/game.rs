@@ -2,15 +2,21 @@ use std::f32::consts::PI;
 
 use glam::{vec3, vec2};
 
-use crate::graphics::{Graphics, Primitive};
+use crate::{graphics::{Graphics, Primitive}, time::TimeStep};
 
 pub struct Game {
+    time_step: TimeStep,
+}
 
+impl Default for Game {
+    fn default() -> Self {
+        Self { time_step: Default::default() }
+    }
 }
 
 impl Game {
     pub fn update(&mut self) {
-
+        self.time_step.tick();
     }
 
     pub fn draw(&self, g: Graphics) -> Graphics {

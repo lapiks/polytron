@@ -111,7 +111,7 @@ impl Graphics {
         self
     }
 
-    pub fn vertex3(mut self, position: Vec3) -> Self{
+    pub fn vertex3(mut self, position: Vec3) -> Self {
         self.vertices.push(
             Vertex {
                 position: position.to_array(),

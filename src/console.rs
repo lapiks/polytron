@@ -5,6 +5,7 @@ use crate::{renderer::Renderer, game::Game, graphics::Graphics};
 // The Polytron console
 pub struct Console {
     renderer: Renderer,
+    game: Game,
 }
 
 impl Console {
@@ -14,24 +15,24 @@ impl Console {
         miniquad::start(conf, move || {
             Box::new(
                 Self {
-                    renderer: Renderer::new()
+                    renderer: Renderer::new(),
+                    game: Game::default(),
                 }
             )
         });
-    }
-
-    pub fn load_game(self) -> Self {
-        todo!();
     }
 }
 
 impl EventHandler for Console {
     fn update(&mut self) {
-
+        self.game.update();
     }
 
     fn draw(&mut self) {
-        let game = Game {};
-        self.renderer.draw(game.draw(Graphics::new()));
+        self.renderer.draw(
+            self.game.draw(
+                Graphics::new()
+            )
+        );
     }
 }
