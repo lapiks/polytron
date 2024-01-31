@@ -106,10 +106,6 @@ impl Renderer {
         }
     }
 
-    pub fn prepare(&mut self, graphics: Graphics) {
-        
-    }
-
     pub fn draw(&mut self, graphics: Graphics) {
         // offscreen pass
         self.ctx.begin_pass(
@@ -117,11 +113,11 @@ impl Renderer {
             PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
         );
 
-        for shape in graphics.shapes {
+        for draw in graphics.flush_draws() {
             let vertex_buffer = self.ctx.new_buffer(
                 BufferType::VertexBuffer,
                 BufferUsage::Immutable,
-                BufferSource::slice(&shape.vertices),
+                BufferSource::slice(&draw.vertices),
             );
 
             let index_buffer = self.ctx.new_buffer(
@@ -137,7 +133,7 @@ impl Renderer {
             };
 
             let vs_params = offscreen_shader::Uniforms {
-                mvp: shape.mvp,
+                mvp: draw.transform,
             };
 
             self.ctx.apply_pipeline(&self.offscreen_pipeline);

@@ -1,4 +1,4 @@
-use glam::{Vec2, Vec3, Vec4, Mat4};
+use glam::Mat4;
 
 #[derive(Clone)]
 #[repr(C)]
@@ -26,51 +26,56 @@ impl Default for Primitive {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum MatrixMode {
-    Model,
-    View,
-    Projection,
+pub struct Shape {
+    primitive: Primitive,
+    vertices: Vec<Vertex>,
 }
 
-impl Default for MatrixMode {
+impl Default for Shape {
     fn default() -> Self {
-        MatrixMode::Model
+        Self {
+            primitive: Primitive::Triangles,
+            vertices: Vec::default(),
+        }
     }
 }
 
-pub struct Shape {
-    pub primitive: Primitive,
-    pub vertices: Vec<Vertex>,
-    pub mvp: Mat4,
+impl Shape {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn with_primitive(mut self, primitive: Primitive) -> Self {
+        self.primitive = primitive;
+        self
+    }
+
+    pub fn with_vertices(mut self, vertices: Vec<Vertex>) -> Self {
+        self.vertices = vertices;
+        self
+    }
+
+    pub fn vertices(&self) -> &Vec<Vertex> {
+        &self.vertices
+    } 
+
+    pub fn primitive(&self) -> Primitive {
+        self.primitive
+    } 
 }
 
-/// The console graphics API
+pub struct DrawCall {
+    pub vertices: Vec<Vertex>,
+    pub transform: Mat4,
+}
+
 pub struct Graphics {
-    current_matrix_mode: MatrixMode,
-    model: Mat4,
-    view: Mat4,
-    projection: Mat4,
-    current_primitive: Primitive,
-    current_color: Vec4,
-    current_normal: Vec3,
-    vertices: Vec<Vertex>,
-    pub shapes: Vec<Shape>,
+    draw_calls: Vec<DrawCall>,
 }
 
 impl Default for Graphics {
     fn default() -> Self {
-        Self {
-            current_matrix_mode: MatrixMode::default(),
-            model: Default::default(),
-            view: Default::default(),
-            projection: Default::default(),
-            current_primitive: Default::default(),
-            current_color: Default::default(),
-            current_normal: Default::default(),
-            vertices: Default::default(),
-            shapes: Default::default(),
-        }
+        Self { draw_calls: Default::default() }
     }
 }
 
@@ -79,96 +84,17 @@ impl Graphics {
         Default::default()
     }
 
-    pub fn begin(mut self, primitive: Primitive) -> Self {
-        self.current_primitive = primitive;
-        self
-    }
-
-    pub fn end(mut self) -> Self {
-        self.shapes.push(
-            Shape {
-                primitive: self.current_primitive,
-                vertices: self.vertices.clone(),
-                mvp: self.projection * self.view * self.model,
-            }
-        );
-
-        // reset state
-        self.current_primitive = Default::default();
-        self.vertices.clear();
-
-        self
-    }
-
-    pub fn vertex2(mut self, position: Vec2) -> Self {
-        self.vertices.push(
-            Vertex {
-                position: Vec3::new(position.x, position.y, 0.0).to_array(),
-                color: self.current_color.to_array(),
-                normal: self.current_normal.to_array()
+    pub fn draw(mut self, shape: &Shape, transform: Mat4) -> Self {
+        self.draw_calls.push(
+            DrawCall {
+                vertices: shape.vertices.clone(),
+                transform
             }
         );
         self
     }
 
-    pub fn vertex3(mut self, position: Vec3) -> Self {
-        self.vertices.push(
-            Vertex {
-                position: position.to_array(),
-                color: self.current_color.to_array(),
-                normal: self.current_normal.to_array()
-            }
-        );
-        self
-    }
-    
-    pub fn color3(mut self, color: Vec3) -> Self {
-        self.current_color = Vec4::new(color.x, color.y, color.z, 1.0);
-        self
-    }
-
-    pub fn color4(mut self, color: Vec4) -> Self {
-        self.current_color = color;
-        self
-    }
-
-    pub fn normal(mut self, normal: Vec3) -> Self {
-        self.current_normal = normal;
-        self
-    }
-
-    pub fn matrix_mode(mut self, mode: MatrixMode) -> Self {
-        self.current_matrix_mode = mode;
-        self
-    }
-
-    pub fn translate(mut self, translation: Vec3) -> Self {
-        let matrix = Mat4::from_translation(translation);
-        match self.current_matrix_mode {
-            MatrixMode::Model => self.model *= matrix,
-            MatrixMode::View => self.view *= matrix,
-            MatrixMode::Projection => self.projection *= matrix,
-        }
-        self
-    }
-
-    pub fn rotate(mut self, angle: f32, axis: Vec3) -> Self {
-        let matrix = Mat4::from_axis_angle(axis, angle);
-        match self.current_matrix_mode {
-            MatrixMode::Model => self.model *= matrix,
-            MatrixMode::View => self.view *= matrix,
-            MatrixMode::Projection => self.projection *= matrix,
-        }
-        self
-    }
-
-    pub fn scale(mut self, scale: Vec3) -> Self {
-        let matrix = Mat4::from_scale(scale);
-        match self.current_matrix_mode {
-            MatrixMode::Model => self.model *= matrix,
-            MatrixMode::View => self.view *= matrix,
-            MatrixMode::Projection => self.projection *= matrix,
-        }
-        self
-    }
+    pub fn flush_draws(self) -> Vec<DrawCall> {
+        self.draw_calls
+    } 
 }
