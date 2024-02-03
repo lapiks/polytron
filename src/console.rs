@@ -1,10 +1,10 @@
 use miniquad::EventHandler;
 
-use crate::{renderer::Renderer, game::Game, graphics::Graphics};
+use crate::{renderer::{Renderer, RendererData}, game::Game, graphics::Graphics};
 
 // The Polytron console
 pub struct Console {
-    graphics: Graphics,
+    data: RendererData,
     renderer: Renderer,
     game: Game,
 }
@@ -16,7 +16,7 @@ impl Console {
         miniquad::start(conf, move || {
             Box::new(
                 Self {
-                    graphics: Graphics::new(),
+                    data: RendererData::default(),
                     renderer: Renderer::new(),
                     game: Game::default(),
                 }
@@ -31,14 +31,16 @@ impl EventHandler for Console {
     }
 
     fn draw(&mut self) {
-        self.graphics.begin_frame();
+        self.data.begin_frame();
 
         self.game.draw(
-            &mut self.graphics
+            Graphics {
+                data: &mut self.data
+            }
         );
 
         self.renderer.draw(
-            &self.graphics
+            &self.data
         );
     }
 }

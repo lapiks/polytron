@@ -1,5 +1,7 @@
 use glam::Mat4;
 
+use crate::renderer::{DrawCall, RendererData};
+
 #[derive(Clone)]
 #[repr(C)]
 pub struct Vertex {
@@ -75,34 +77,14 @@ impl Shape {
     } 
 }
 
-pub struct DrawCall {
-    pub vertices: Vec<Vertex>,
-    pub indices: Vec<i32>,
-    pub transform: Mat4,
+pub struct Graphics<'a> {
+    pub data: &'a mut RendererData,
 }
 
-pub struct Graphics {
-    draw_calls: Vec<DrawCall>,
-    draw_calls_count: usize,
-}
-
-impl Default for Graphics {
-    fn default() -> Self {
-        Self { 
-            draw_calls: Default::default() ,
-            draw_calls_count: 0,
-        }
-    }
-}
-
-impl Graphics {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn draw(&mut self, shape: &Shape, transform: Mat4) -> &mut Self {
-        if self.draw_calls.len() <= self.draw_calls_count {
-            self.draw_calls.push(
+impl<'a> Graphics<'a> {
+    pub fn draw(self, shape: &Shape, transform: Mat4) -> Self {
+        if self.data.draw_calls.len() <= self.data.draw_calls_count {
+            self.data.draw_calls.push(
                 DrawCall {
                     vertices: shape.vertices.clone(),
                     indices: shape.indices.clone(),
@@ -110,21 +92,12 @@ impl Graphics {
                 }
             );
         } else {
-            self.draw_calls[self.draw_calls_count].vertices = shape.vertices.clone();
-            self.draw_calls[self.draw_calls_count].indices = shape.indices.clone();
-            self.draw_calls[self.draw_calls_count].transform = transform;
+            self.data.draw_calls[self.data.draw_calls_count].vertices = shape.vertices.clone();
+            self.data.draw_calls[self.data.draw_calls_count].indices = shape.indices.clone();
+            self.data.draw_calls[self.data.draw_calls_count].transform = transform;
         }
 
-        self.draw_calls_count += 1;        
+        self.data.draw_calls_count += 1;        
         self
     }
-
-    // private impl to move to another struct
-    pub fn begin_frame(&mut self) {
-        self.draw_calls_count = 0;
-    }
-
-    pub fn draw_calls(&self) -> &Vec<DrawCall> {
-        &self.draw_calls
-    } 
 }

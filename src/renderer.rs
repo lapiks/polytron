@@ -1,6 +1,33 @@
+use glam::Mat4;
 use miniquad::*;
 
-use crate::graphics::Graphics;
+use crate::graphics::Vertex;
+
+pub struct RendererData {
+    pub draw_calls: Vec<DrawCall>,
+    pub draw_calls_count: usize,
+}
+
+impl Default for RendererData {
+    fn default() -> Self {
+        Self { 
+            draw_calls: Default::default(), 
+            draw_calls_count: 0 
+        }
+    }
+}
+
+impl RendererData {
+    pub fn begin_frame(&mut self) {
+        self.draw_calls_count = 0;
+    }
+}
+
+pub struct DrawCall {
+    pub vertices: Vec<Vertex>,
+    pub indices: Vec<i32>,
+    pub transform: Mat4,
+}
 
 /// The console renderer
 pub struct Renderer {
@@ -106,14 +133,14 @@ impl Renderer {
         }
     }
 
-    pub fn draw(&mut self, graphics: &Graphics) {
+    pub fn draw(&mut self, data: &RendererData) {
         // offscreen pass
         self.ctx.begin_pass(
             Some(self.offscreen_pass),
             PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
         );
 
-        for draw in graphics.draw_calls() {
+        for draw in data.draw_calls.iter() {
             let vertex_buffer = self.ctx.new_buffer(
                 BufferType::VertexBuffer,
                 BufferUsage::Immutable,

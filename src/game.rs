@@ -17,7 +17,7 @@ impl Game {
         self.time_step.tick();
     }
 
-    pub fn draw(&self, g: &mut Graphics) {
+    pub fn draw(&self, g: Graphics) {
         let shape = Shape::default()
         .with_vertices(vec![
             Vertex {
