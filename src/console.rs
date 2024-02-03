@@ -16,9 +16,9 @@ impl Console {
         miniquad::start(conf, move || {
             Box::new(
                 Self {
-                    data: RendererData::default(),
+                    data: RendererData::new(),
                     renderer: Renderer::new(),
-                    game: Game::default(),
+                    game: Game::new(),
                 }
             )
         });
@@ -40,7 +40,7 @@ impl EventHandler for Console {
         );
 
         self.renderer.draw(
-            &self.data
+            &mut self.data
         );
     }
 }

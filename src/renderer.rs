@@ -5,19 +5,19 @@ use crate::graphics::Vertex;
 
 pub struct RendererData {
     pub draw_calls: Vec<DrawCall>,
+    pub draw_calls_binding: Vec<Bindings>,
     pub draw_calls_count: usize,
 }
 
-impl Default for RendererData {
-    fn default() -> Self {
-        Self { 
-            draw_calls: Default::default(), 
-            draw_calls_count: 0 
+impl RendererData {
+    pub fn new() -> Self {
+        Self {
+            draw_calls: Vec::with_capacity(100),
+            draw_calls_binding: Vec::with_capacity(100),
+            draw_calls_count: 0,
         }
     }
-}
 
-impl RendererData {
     pub fn begin_frame(&mut self) {
         self.draw_calls_count = 0;
     }
@@ -133,38 +133,55 @@ impl Renderer {
         }
     }
 
-    pub fn draw(&mut self, data: &RendererData) {
+    pub fn draw(&mut self, data: &mut RendererData) {
+        for _ in 0..data.draw_calls.len() - data.draw_calls_binding.len() {
+            let vertex_buffer = self.ctx.new_buffer(
+                BufferType::VertexBuffer,
+                BufferUsage::Immutable,
+                BufferSource::empty::<Vertex>(4096),
+            );
+
+            let index_buffer = self.ctx.new_buffer(
+                BufferType::IndexBuffer,
+                BufferUsage::Immutable,
+                BufferSource::empty::<i32>(4096),
+            );
+
+            let bindings = Bindings {
+                vertex_buffers: vec![vertex_buffer],
+                index_buffer,
+                images: vec![],
+            };
+
+            data.draw_calls_binding.push(bindings);
+        }
+
         // offscreen pass
         self.ctx.begin_pass(
             Some(self.offscreen_pass),
             PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
         );
 
-        for draw in data.draw_calls.iter() {
-            let vertex_buffer = self.ctx.new_buffer(
-                BufferType::VertexBuffer,
-                BufferUsage::Immutable,
-                BufferSource::slice(&draw.vertices),
-            );
+        self.ctx.apply_pipeline(&self.offscreen_pipeline);
 
-            let index_buffer = self.ctx.new_buffer(
-                BufferType::IndexBuffer,
-                BufferUsage::Immutable,
-                BufferSource::slice(&draw.indices),
-            );
+        for (draw, bindings) in data.draw_calls
+            .iter()
+            .zip(data.draw_calls_binding.iter()) {
+                self.ctx.buffer_update(
+                    bindings.vertex_buffers[0], 
+                    BufferSource::slice(&draw.vertices)
+                );
 
-            let offscreen_bind = Bindings {
-                vertex_buffers: vec![vertex_buffer],
-                index_buffer,
-                images: vec![],
-            };
+                self.ctx.buffer_update(
+                    bindings.index_buffer, 
+                    BufferSource::slice(&draw.indices)
+                );
 
-            let vs_params = offscreen_shader::Uniforms {
-                mvp: draw.transform,
-            };
+                let vs_params = offscreen_shader::Uniforms {
+                    mvp: draw.transform,
+                };
 
-            self.ctx.apply_pipeline(&self.offscreen_pipeline);
-            self.ctx.apply_bindings(&offscreen_bind);
+            self.ctx.apply_bindings(bindings);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
             self.ctx.draw(0, draw.indices.len() as i32, 1);
         }

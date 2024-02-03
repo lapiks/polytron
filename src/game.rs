@@ -13,6 +13,10 @@ impl Default for Game {
 }
 
 impl Game {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn update(&mut self) {
         self.time_step.tick();
     }
