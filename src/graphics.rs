@@ -101,14 +101,27 @@ impl Graphics {
     }
 
     pub fn draw(&mut self, shape: &Shape, transform: Mat4) -> &mut Self {
-        self.draw_calls.push(
-            DrawCall {
-                vertices: shape.vertices.clone(),
-                indices: shape.indices.clone(),
-                transform,
-            }
-        );
+        if self.draw_calls.len() <= self.draw_calls_count {
+            self.draw_calls.push(
+                DrawCall {
+                    vertices: shape.vertices.clone(),
+                    indices: shape.indices.clone(),
+                    transform,
+                }
+            );
+        } else {
+            self.draw_calls[self.draw_calls_count].vertices = shape.vertices.clone();
+            self.draw_calls[self.draw_calls_count].indices = shape.indices.clone();
+            self.draw_calls[self.draw_calls_count].transform = transform;
+        }
+
+        self.draw_calls_count += 1;        
         self
+    }
+
+    // private impl to move to another struct
+    pub fn begin_frame(&mut self) {
+        self.draw_calls_count = 0;
     }
 
     pub fn draw_calls(&self) -> &Vec<DrawCall> {

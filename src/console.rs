@@ -31,6 +31,8 @@ impl EventHandler for Console {
     }
 
     fn draw(&mut self) {
+        self.graphics.begin_frame();
+
         self.game.draw(
             &mut self.graphics
         );
