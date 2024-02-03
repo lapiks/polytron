@@ -1,4 +1,4 @@
-use glam::{vec3, Mat4};
+use glam::{vec2, vec3, Mat4};
 
 use crate::{graphics::{Graphics, Shape, Vertex}, time::TimeStep};
 
@@ -51,6 +51,7 @@ impl Game {
 
         g
         .draw(&shape, Mat4::IDENTITY)
-        .draw(&shape, Mat4::from_translation(vec3(0.5, 0.0, 0.0)));
+        .draw(&shape, Mat4::from_translation(vec3(0.5, 0.0, 0.0)))
+        .draw_rectangle(vec2(0.0, 0.0), vec2(0.5, 0.5));
     }
 }

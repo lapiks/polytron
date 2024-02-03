@@ -1,4 +1,4 @@
-use glam::Mat4;
+use glam::{Mat4, Vec2};
 
 use crate::renderer::{DrawCall, RendererData};
 
@@ -83,21 +83,60 @@ pub struct Graphics<'a> {
 
 impl<'a> Graphics<'a> {
     pub fn draw(self, shape: &Shape, transform: Mat4) -> Self {
+        self.new_draw_call(
+            &shape.vertices, 
+            &shape.indices, 
+            transform
+        )
+    }
+
+    pub fn draw_rectangle(self, position: Vec2, size: Vec2) -> Self {
+        self.new_draw_call(
+            &vec![
+                Vertex {
+                    position: [position.x, position.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+                Vertex {
+                    position: [position.x + size.x, position.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+                Vertex {
+                    position: [position.x, position.y + size.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+                Vertex {
+                    position: [position.x + size.x, position.y + size.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+            ], 
+            &vec![
+                0, 1, 2, 1, 2, 3,
+            ], 
+            Mat4::IDENTITY,
+        )
+    }
+
+    pub fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: Mat4) -> Self{
         if self.data.draw_calls.len() <= self.data.draw_calls_count {
             self.data.draw_calls.push(
                 DrawCall {
-                    vertices: shape.vertices.clone(),
-                    indices: shape.indices.clone(),
+                    vertices: vertices.clone(),
+                    indices: indices.clone(),
                     transform,
                 }
             );
         } else {
-            self.data.draw_calls[self.data.draw_calls_count].vertices = shape.vertices.clone();
-            self.data.draw_calls[self.data.draw_calls_count].indices = shape.indices.clone();
+            self.data.draw_calls[self.data.draw_calls_count].vertices = vertices.clone();
+            self.data.draw_calls[self.data.draw_calls_count].indices = indices.clone();
             self.data.draw_calls[self.data.draw_calls_count].transform = transform;
         }
 
-        self.data.draw_calls_count += 1;        
+        self.data.draw_calls_count += 1;
         self
     }
 }
