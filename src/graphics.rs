@@ -29,6 +29,7 @@ impl Default for Primitive {
 pub struct Shape {
     primitive: Primitive,
     vertices: Vec<Vertex>,
+    indices: Vec<u32>,
 }
 
 impl Default for Shape {
@@ -36,6 +37,7 @@ impl Default for Shape {
         Self {
             primitive: Primitive::Triangles,
             vertices: Vec::default(),
+            indices: Vec::default(),
         }
     }
 }
@@ -55,8 +57,17 @@ impl Shape {
         self
     }
 
+    pub fn with_indices(mut self, indices: Vec<u32>) -> Self {
+        self.indices = indices;
+        self
+    }
+
     pub fn vertices(&self) -> &Vec<Vertex> {
         &self.vertices
+    } 
+
+    pub fn indices(&self) -> &Vec<u32> {
+        &self.indices
     } 
 
     pub fn primitive(&self) -> Primitive {
@@ -66,6 +77,7 @@ impl Shape {
 
 pub struct DrawCall {
     pub vertices: Vec<Vertex>,
+    pub indices: Vec<u32>,
     pub transform: Mat4,
 }
 
@@ -88,7 +100,8 @@ impl Graphics {
         self.draw_calls.push(
             DrawCall {
                 vertices: shape.vertices.clone(),
-                transform
+                indices: shape.indices.clone(),
+                transform,
             }
         );
         self

@@ -123,12 +123,12 @@ impl Renderer {
             let index_buffer = self.ctx.new_buffer(
                 BufferType::IndexBuffer,
                 BufferUsage::Immutable,
-                BufferSource::slice(&[0, 1, 2]),
+                BufferSource::slice(&draw.indices),
             );
 
             let offscreen_bind = Bindings {
                 vertex_buffers: vec![vertex_buffer],
-                index_buffer: index_buffer,
+                index_buffer,
                 images: vec![],
             };
 
@@ -139,7 +139,7 @@ impl Renderer {
             self.ctx.apply_pipeline(&self.offscreen_pipeline);
             self.ctx.apply_bindings(&offscreen_bind);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
-            self.ctx.draw(0, 3, 1);
+            self.ctx.draw(0, draw.indices.len() as i32, 1);
         }
 
         self.ctx.end_render_pass();

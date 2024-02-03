@@ -21,20 +21,28 @@ impl Game {
         let shape = Shape::default()
         .with_vertices(vec![
             Vertex {
-                position: [-0.5, -0.5, 0.0],
+                position: [-0.5, 0.5, 0.0],
                 color: [1.0, 0.0, 0.0, 1.0], 
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [0.5, -0.5, 0.0],
+                position: [-0.5, -0.5, 0.0],
                 color: [0.0, 1.0, 0.0, 1.0], 
                 normal: [0.0, 0.0, 0.0],
             },
             Vertex {
-                position: [0.0, 0.5, 0.0],
+                position: [0.5, 0.5, 0.0],
                 color: [0.0, 0.0, 1.0, 1.0], 
                 normal: [0.0, 0.0, 0.0],
             },
+            Vertex {
+                position: [0.5, -0.5, 0.0],
+                color: [0.0, 0.0, 1.0, 1.0], 
+                normal: [0.0, 0.0, 0.0],
+            },
+        ])
+        .with_indices(vec![
+            0, 1, 2, 2, 1, 3
         ]);
 
         g.draw(&shape, Mat4::IDENTITY)
