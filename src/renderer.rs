@@ -7,6 +7,7 @@ pub struct RendererData {
     pub draw_calls: Vec<DrawCall>,
     pub draw_calls_binding: Vec<Bindings>,
     pub draw_calls_count: usize,
+    pub view_proj: Mat4,
 }
 
 impl RendererData {
@@ -15,6 +16,7 @@ impl RendererData {
             draw_calls: Vec::with_capacity(100),
             draw_calls_binding: Vec::with_capacity(100),
             draw_calls_count: 0,
+            view_proj: Mat4::IDENTITY,
         }
     }
 
@@ -26,7 +28,7 @@ impl RendererData {
 pub struct DrawCall {
     pub vertices: Vec<Vertex>,
     pub indices: Vec<i32>,
-    pub transform: Mat4,
+    pub model: Mat4,
 }
 
 /// The console renderer
@@ -178,7 +180,7 @@ impl Renderer {
                 );
 
                 let vs_params = offscreen_shader::Uniforms {
-                    mvp: draw.transform,
+                    mvp: data.view_proj * draw.model,
                 };
 
             self.ctx.apply_bindings(bindings);

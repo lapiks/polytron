@@ -1,6 +1,8 @@
-use glam::{Mat4, Vec2};
+use std::f32::consts::PI;
 
-use crate::renderer::{DrawCall, RendererData};
+use glam::{vec3, Mat4, Vec2};
+
+use crate::{object::Object, renderer::{DrawCall, RendererData}};
 
 #[derive(Clone)]
 #[repr(C)]
@@ -28,53 +30,21 @@ impl Default for Primitive {
     }
 }
 
-pub struct Shape {
-    primitive: Primitive,
-    vertices: Vec<Vertex>,
-    indices: Vec<i32>,
+pub struct Camera {
+    transform: Mat4,
+    projection: Mat4,
 }
 
-impl Default for Shape {
-    fn default() -> Self {
+impl Camera {
+    pub fn new() -> Self {
+        let transform = Mat4::from_translation(vec3(0.0, 0.0, 5.0));
+        let projection = Mat4::perspective_rh_gl(PI / 4.0, 320.0 / 200.0, 0.01, 100.0);
+
         Self {
-            primitive: Primitive::Triangles,
-            vertices: Vec::default(),
-            indices: Vec::default(),
+            transform,
+            projection,
         }
     }
-}
-
-impl Shape {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn with_primitive(mut self, primitive: Primitive) -> Self {
-        self.primitive = primitive;
-        self
-    }
-
-    pub fn with_vertices(mut self, vertices: Vec<Vertex>) -> Self {
-        self.vertices = vertices;
-        self
-    }
-
-    pub fn with_indices(mut self, indices: Vec<i32>) -> Self {
-        self.indices = indices;
-        self
-    }
-
-    pub fn vertices(&self) -> &Vec<Vertex> {
-        &self.vertices
-    } 
-
-    pub fn indices(&self) -> &Vec<i32> {
-        &self.indices
-    } 
-
-    pub fn primitive(&self) -> Primitive {
-        self.primitive
-    } 
 }
 
 pub struct Graphics<'a> {
@@ -82,11 +52,16 @@ pub struct Graphics<'a> {
 }
 
 impl<'a> Graphics<'a> {
-    pub fn draw(self, shape: &Shape, transform: Mat4) -> Self {
+    pub fn set_camera(self, camera: &Camera) -> Self {
+        self.data.view_proj = camera.projection * camera.transform.inverse();
+        self
+    }
+
+    pub fn draw(self, object: &Object) -> Self {
         self.new_draw_call(
-            &shape.vertices, 
-            &shape.indices, 
-            transform
+            object.vertices(),
+            object.indices(),
+            object.transform()
         )
     }
 
@@ -117,23 +92,23 @@ impl<'a> Graphics<'a> {
             &vec![
                 0, 1, 2, 1, 2, 3,
             ], 
-            Mat4::IDENTITY,
+            &Mat4::IDENTITY,
         )
     }
 
-    pub fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: Mat4) -> Self{
+    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4) -> Self{
         if self.data.draw_calls.len() <= self.data.draw_calls_count {
             self.data.draw_calls.push(
                 DrawCall {
                     vertices: vertices.clone(),
                     indices: indices.clone(),
-                    transform,
+                    model: *transform,
                 }
             );
         } else {
             self.data.draw_calls[self.data.draw_calls_count].vertices = vertices.clone();
             self.data.draw_calls[self.data.draw_calls_count].indices = indices.clone();
-            self.data.draw_calls[self.data.draw_calls_count].transform = transform;
+            self.data.draw_calls[self.data.draw_calls_count].model = *transform;
         }
 
         self.data.draw_calls_count += 1;

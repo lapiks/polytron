@@ -7,6 +7,7 @@ pub struct Console {
     data: RendererData,
     renderer: Renderer,
     game: Game,
+    game_init: bool,
 }
 
 impl Console {
@@ -19,6 +20,7 @@ impl Console {
                     data: RendererData::new(),
                     renderer: Renderer::new(),
                     game: Game::new(),
+                    game_init: false,
                 }
             )
         });
@@ -27,6 +29,10 @@ impl Console {
 
 impl EventHandler for Console {
     fn update(&mut self) {
+        if !self.game_init {
+            self.game.init();
+        }
+
         self.game.update();
     }
 
