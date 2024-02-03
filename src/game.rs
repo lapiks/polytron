@@ -1,4 +1,4 @@
-use glam::Mat4;
+use glam::{vec3, Mat4};
 
 use crate::{graphics::{Graphics, Shape, Vertex}, time::TimeStep};
 
@@ -17,7 +17,7 @@ impl Game {
         self.time_step.tick();
     }
 
-    pub fn draw(&self, g: Graphics) -> Graphics {
+    pub fn draw(&self, g: &mut Graphics) {
         let shape = Shape::default()
         .with_vertices(vec![
             Vertex {
@@ -45,6 +45,8 @@ impl Game {
             0, 1, 2, 2, 1, 3
         ]);
 
-        g.draw(&shape, Mat4::IDENTITY)
+        g
+        .draw(&shape, Mat4::IDENTITY)
+        .draw(&shape, Mat4::from_translation(vec3(0.5, 0.0, 0.0)));
     }
 }

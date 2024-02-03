@@ -29,7 +29,7 @@ impl Default for Primitive {
 pub struct Shape {
     primitive: Primitive,
     vertices: Vec<Vertex>,
-    indices: Vec<u32>,
+    indices: Vec<i32>,
 }
 
 impl Default for Shape {
@@ -57,7 +57,7 @@ impl Shape {
         self
     }
 
-    pub fn with_indices(mut self, indices: Vec<u32>) -> Self {
+    pub fn with_indices(mut self, indices: Vec<i32>) -> Self {
         self.indices = indices;
         self
     }
@@ -66,7 +66,7 @@ impl Shape {
         &self.vertices
     } 
 
-    pub fn indices(&self) -> &Vec<u32> {
+    pub fn indices(&self) -> &Vec<i32> {
         &self.indices
     } 
 
@@ -77,17 +77,21 @@ impl Shape {
 
 pub struct DrawCall {
     pub vertices: Vec<Vertex>,
-    pub indices: Vec<u32>,
+    pub indices: Vec<i32>,
     pub transform: Mat4,
 }
 
 pub struct Graphics {
     draw_calls: Vec<DrawCall>,
+    draw_calls_count: usize,
 }
 
 impl Default for Graphics {
     fn default() -> Self {
-        Self { draw_calls: Default::default() }
+        Self { 
+            draw_calls: Default::default() ,
+            draw_calls_count: 0,
+        }
     }
 }
 
@@ -96,7 +100,7 @@ impl Graphics {
         Default::default()
     }
 
-    pub fn draw(mut self, shape: &Shape, transform: Mat4) -> Self {
+    pub fn draw(&mut self, shape: &Shape, transform: Mat4) -> &mut Self {
         self.draw_calls.push(
             DrawCall {
                 vertices: shape.vertices.clone(),
@@ -107,7 +111,7 @@ impl Graphics {
         self
     }
 
-    pub fn flush_draws(self) -> Vec<DrawCall> {
-        self.draw_calls
+    pub fn draw_calls(&self) -> &Vec<DrawCall> {
+        &self.draw_calls
     } 
 }

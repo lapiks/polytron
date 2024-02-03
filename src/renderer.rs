@@ -106,14 +106,14 @@ impl Renderer {
         }
     }
 
-    pub fn draw(&mut self, graphics: Graphics) {
+    pub fn draw(&mut self, graphics: &Graphics) {
         // offscreen pass
         self.ctx.begin_pass(
             Some(self.offscreen_pass),
             PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
         );
 
-        for draw in graphics.flush_draws() {
+        for draw in graphics.draw_calls() {
             let vertex_buffer = self.ctx.new_buffer(
                 BufferType::VertexBuffer,
                 BufferUsage::Immutable,
