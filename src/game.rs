@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::vec2;
 
-use crate::{graphics::{Camera2d, Camera3d, Graphics}, object::Object, time::TimeStep};
+use crate::{color::Color, graphics::{Camera2d, Camera3d, Graphics}, object::Object, time::TimeStep};
 
 pub struct Game {
     time_step: TimeStep,
@@ -43,6 +43,6 @@ impl Game {
         .set_camera(&self.camera_3d)
         .draw(&self.cube)
         .set_camera(&self.camera_2d)
-        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0));
+        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green());
     }
 }

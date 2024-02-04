@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec3, Mat4, Vec2};
 
-use crate::{object::Object, renderer::{DrawCall, Primitive, RendererData}};
+use crate::{color::Color, object::Object, renderer::{DrawCall, Primitive, RendererData}};
 
 #[derive(Clone)]
 #[repr(C)]
@@ -81,17 +81,17 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn draw_line(self, p1: Vec2, p2: Vec2) -> Self {
+    pub fn draw_line(self, p1: Vec2, p2: Vec2, color: Color) -> Self {
         self.new_draw_call(
             &vec![
                 Vertex {
                     position: [p1.x, p1.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
                 Vertex {
                     position: [p2.x, p2.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
             ], 
@@ -103,27 +103,27 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn draw_rectangle(self, position: Vec2, size: Vec2) -> Self {
+    pub fn draw_rectangle(self, position: Vec2, size: Vec2, color: Color) -> Self {
         self.new_draw_call(
             &vec![
                 Vertex {
                     position: [position.x, position.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
                 Vertex {
                     position: [position.x + size.x, position.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
                 Vertex {
                     position: [position.x, position.y + size.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
                 Vertex {
                     position: [position.x + size.x, position.y + size.y, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
+                    color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
             ], 

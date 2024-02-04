@@ -5,6 +5,7 @@ mod object;
 mod game;
 mod time;
 mod shapes;
+mod color;
 
 use crate::console::Console;
 
