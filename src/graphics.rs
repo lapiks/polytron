@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec3, Mat4, Vec2};
 
-use crate::{object::Object, renderer::{DrawCall, RendererData}};
+use crate::{object::Object, renderer::{DrawCall, Primitive, RendererData}};
 
 #[derive(Clone)]
 #[repr(C)]
@@ -12,33 +12,48 @@ pub struct Vertex {
     pub normal: [f32; 3],
 }
 
-#[derive(Clone, Copy)]
-pub enum Primitive {
-    Unknown,
-    Points,
-    Lines,
-    LineStrips,
-    LineLoops,
-    Triangles,
-    TriangleStrips,
-    TriangleFans,
+pub trait Camera {
+    fn view_proj(&self) -> Mat4;
 }
 
-impl Default for Primitive {
-    fn default() -> Self {
-        Primitive::Unknown
-    }
-}
-
-pub struct Camera {
+pub struct Camera3d {
     transform: Mat4,
     projection: Mat4,
 }
 
-impl Camera {
+impl Camera for Camera3d {
+    fn view_proj(&self) -> Mat4 {
+        self.projection * self.transform.inverse()
+    }
+}
+
+impl Camera3d {
     pub fn new() -> Self {
         let transform = Mat4::from_translation(vec3(0.0, 0.0, 5.0));
         let projection = Mat4::perspective_rh_gl(PI / 4.0, 320.0 / 200.0, 0.01, 100.0);
+
+        Self {
+            transform,
+            projection,
+        }
+    }
+}
+
+pub struct Camera2d {
+    transform: Mat4,
+    projection: Mat4,
+}
+
+impl Camera for Camera2d {
+    fn view_proj(&self) -> Mat4 {
+        self.projection * self.transform
+    }
+}
+
+impl Camera2d {
+    pub fn new() -> Self {
+        let transform = Mat4::IDENTITY;
+        let projection = Mat4::IDENTITY;
 
         Self {
             transform,
@@ -52,8 +67,8 @@ pub struct Graphics<'a> {
 }
 
 impl<'a> Graphics<'a> {
-    pub fn set_camera(self, camera: &Camera) -> Self {
-        self.data.view_proj = camera.projection * camera.transform.inverse();
+    pub fn set_camera(self, camera: &dyn Camera) -> Self {
+        self.data.view_proj = camera.view_proj();
         self
     }
 
@@ -61,7 +76,30 @@ impl<'a> Graphics<'a> {
         self.new_draw_call(
             object.vertices(),
             object.indices(),
-            object.transform()
+            object.transform(),
+            Primitive::Triangles,
+        )
+    }
+
+    pub fn draw_line(self, p1: Vec2, p2: Vec2) -> Self {
+        self.new_draw_call(
+            &vec![
+                Vertex {
+                    position: [p1.x, p1.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+                Vertex {
+                    position: [p2.x, p2.y, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    normal: [0.0, 0.0, 0.0],
+                },
+            ], 
+            &vec![
+                0, 1,
+            ], 
+            &Mat4::IDENTITY,
+            Primitive::Lines,
         )
     }
 
@@ -93,16 +131,19 @@ impl<'a> Graphics<'a> {
                 0, 1, 2, 1, 2, 3,
             ], 
             &Mat4::IDENTITY,
+            Primitive::Triangles,
         )
     }
 
-    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4) -> Self{
+    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive) -> Self{
         if self.data.draw_calls.len() <= self.data.draw_calls_count {
             self.data.draw_calls.push(
                 DrawCall {
                     vertices: vertices.clone(),
                     indices: indices.clone(),
                     model: *transform,
+                    view_proj: self.data.view_proj,
+                    primitive,
                 }
             );
         } else {

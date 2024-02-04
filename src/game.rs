@@ -1,10 +1,13 @@
 use std::f32::consts::PI;
 
-use crate::{graphics::{Camera, Graphics}, object::Object, time::TimeStep};
+use glam::vec2;
+
+use crate::{graphics::{Camera2d, Camera3d, Graphics}, object::Object, time::TimeStep};
 
 pub struct Game {
     time_step: TimeStep,
-    camera: Camera,
+    camera_3d: Camera3d,
+    camera_2d: Camera2d,
     cube: Object,
 }
 
@@ -12,7 +15,8 @@ impl Default for Game {
     fn default() -> Self {
         Self { 
             time_step: Default::default() ,
-            camera: Camera::new(),
+            camera_3d: Camera3d::new(),
+            camera_2d: Camera2d::new(),
             cube: Object::new_cube(),
         }
     }
@@ -36,7 +40,9 @@ impl Game {
 
     pub fn draw(&self, g: Graphics) {
         g
-        .set_camera(&Camera::new())
-        .draw(&self.cube);
+        .set_camera(&self.camera_3d)
+        .draw(&self.cube)
+        .set_camera(&self.camera_2d)
+        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0));
     }
 }

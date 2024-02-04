@@ -3,6 +3,12 @@ use miniquad::*;
 
 use crate::graphics::Vertex;
 
+#[derive(Clone, Copy)]
+pub enum Primitive {
+    Lines,
+    Triangles,
+}
+
 pub struct RendererData {
     pub draw_calls: Vec<DrawCall>,
     pub draw_calls_binding: Vec<Bindings>,
@@ -29,18 +35,23 @@ pub struct DrawCall {
     pub vertices: Vec<Vertex>,
     pub indices: Vec<i32>,
     pub model: Mat4,
+    pub view_proj: Mat4,
+    pub primitive: Primitive,
 }
 
 /// The console renderer
 pub struct Renderer {
     display_pipeline: Pipeline,
     display_bind: Bindings,
-    offscreen_pipeline: Pipeline,
+    pipelines: [Pipeline; 2],
     offscreen_pass: RenderPass,
     ctx: Box<dyn RenderingBackend>,
 }
 
 impl Renderer {
+    const TRIANGLES_PIPELINE: usize = 0;
+    const LINES_PIPELINE: usize = 1;
+
     pub fn new() -> Renderer {
         let mut ctx: Box<dyn RenderingBackend> = window::new_rendering_backend();
 
@@ -72,7 +83,7 @@ impl Renderer {
             )
             .unwrap();
 
-        let offscreen_pipeline = ctx.new_pipeline(
+        let triangles_pipeline = ctx.new_pipeline_with_params(
             &[BufferLayout::default()],
             &[
                 VertexAttribute::new("in_pos", VertexFormat::Float3),
@@ -80,7 +91,27 @@ impl Renderer {
                 VertexAttribute::new("in_normal", VertexFormat::Float3),
             ],
             offscreen_shader,
+            PipelineParams {
+                primitive_type: PrimitiveType::Triangles,
+                ..Default::default()
+            }
         );
+
+        let lines_pipeline = ctx.new_pipeline_with_params(
+            &[BufferLayout::default()],
+            &[
+                VertexAttribute::new("in_pos", VertexFormat::Float3),
+                VertexAttribute::new("in_color", VertexFormat::Float4),
+                VertexAttribute::new("in_normal", VertexFormat::Float3),
+            ],
+            offscreen_shader,
+            PipelineParams {
+                primitive_type: PrimitiveType::Lines,
+                ..Default::default()
+            }
+        );
+
+        let pipelines = [triangles_pipeline, lines_pipeline];
 
         // display pass
         let quad_vertices = [
@@ -129,7 +160,7 @@ impl Renderer {
         Renderer {
             display_pipeline,
             display_bind,
-            offscreen_pipeline,
+            pipelines,
             offscreen_pass,
             ctx,
         }
@@ -164,8 +195,6 @@ impl Renderer {
             PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
         );
 
-        self.ctx.apply_pipeline(&self.offscreen_pipeline);
-
         for (draw, bindings) in data.draw_calls
             .iter()
             .zip(data.draw_calls_binding.iter()) {
@@ -180,9 +209,10 @@ impl Renderer {
                 );
 
                 let vs_params = offscreen_shader::Uniforms {
-                    mvp: data.view_proj * draw.model,
+                    mvp: draw.view_proj * draw.model,
                 };
 
+            self.ctx.apply_pipeline(&self.get_pipeline(draw.primitive));
             self.ctx.apply_bindings(bindings);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
             self.ctx.draw(0, draw.indices.len() as i32, 1);
@@ -200,6 +230,13 @@ impl Renderer {
         self.ctx.end_render_pass();
 
         self.ctx.commit_frame();
+    }
+
+    fn get_pipeline(&self, primitive: Primitive) -> Pipeline {
+        match primitive {
+            Primitive::Lines => self.pipelines[Self::LINES_PIPELINE],
+            Primitive::Triangles => self.pipelines[Self::TRIANGLES_PIPELINE],
+        }
     }
 }
 
