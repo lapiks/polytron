@@ -3,7 +3,7 @@ use miniquad::*;
 
 use crate::graphics::Vertex;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Primitive {
     Lines,
     Triangles,

@@ -135,24 +135,43 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive) -> Self{
-        if self.data.draw_calls.len() <= self.data.draw_calls_count {
-            self.data.draw_calls.push(
-                DrawCall {
-                    vertices: vertices.clone(),
-                    indices: indices.clone(),
-                    model: *transform,
-                    view_proj: self.data.view_proj,
-                    primitive,
-                }
-            );
+    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive) -> Self {
+        let previous_dc = if self.data.draw_calls_count == 0 {
+            None
         } else {
-            self.data.draw_calls[self.data.draw_calls_count].vertices = vertices.clone();
-            self.data.draw_calls[self.data.draw_calls_count].indices = indices.clone();
-            self.data.draw_calls[self.data.draw_calls_count].model = *transform;
+            self.data.draw_calls.get(self.data.draw_calls_count - 1)
         }
-
-        self.data.draw_calls_count += 1;
+        ;
+        if previous_dc.map_or(true, |draw_call| {
+            draw_call.model != *transform ||
+            draw_call.primitive != primitive
+        }) {
+            // start a new draw call
+            if self.data.draw_calls.len() <= self.data.draw_calls_count {
+                // brand new draw call
+                self.data.draw_calls.push(
+                    DrawCall {
+                        vertices: vertices.clone(),
+                        indices: indices.clone(),
+                        model: *transform,
+                        view_proj: self.data.view_proj,
+                        primitive,
+                    }
+                );
+            } else {
+                // reuse empty draw call
+                self.data.draw_calls[self.data.draw_calls_count].vertices = vertices.clone();
+                self.data.draw_calls[self.data.draw_calls_count].indices = indices.clone();
+                self.data.draw_calls[self.data.draw_calls_count].model = *transform;
+            }
+    
+            self.data.draw_calls_count += 1;
+        } else {
+            // complete existing draw call
+            self.data.draw_calls[self.data.draw_calls_count].vertices.append(&mut vertices.clone());
+            self.data.draw_calls[self.data.draw_calls_count].indices.append(&mut indices.clone());
+        }
+        
         self
     }
 }
