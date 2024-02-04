@@ -23,6 +23,10 @@ impl Color {
         Color::new(0.0, 0.0, 0.0, 1.0)
     }
 
+    pub fn gray() -> Color {
+        Color::new(0.5, 0.5, 0.5, 1.0)
+    }
+
     pub fn red() -> Color {
         Color::new(1.0, 0.0, 0.0, 1.0)
     }

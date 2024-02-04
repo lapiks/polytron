@@ -2,6 +2,12 @@ use miniquad::EventHandler;
 
 use crate::{renderer::{Renderer, RendererData}, game::Game, graphics::Graphics};
 
+pub trait System {
+    fn init(&mut self);
+    fn update(&mut self);
+    fn draw(&self, g: Graphics);
+}
+
 // The Polytron console
 pub struct Console {
     data: RendererData,
