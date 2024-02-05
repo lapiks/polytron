@@ -172,22 +172,27 @@ impl Cube {
             },
             // face 4 +y
             Vertex {
+                position: p2,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
                 position: p3,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
             Vertex {
-                position: p2,
+                position: p6,
+                color: color.as_array(),
+                normal: [0.0, 1.0, -1.0],
+            },
+            Vertex {
+                position: p3,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
             Vertex {
                 position: p7,
-                color: color.as_array(),
-                normal: [0.0, 1.0, -1.0],
-            },
-            Vertex {
-                position: p2,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
@@ -196,15 +201,10 @@ impl Cube {
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
-            Vertex {
-                position: p7,
-                color: color.as_array(),
-                normal: [0.0, 1.0, 0.0],
-            },
         ]
     }
 
     pub fn indices() -> Vec<i32> {
-        (0..35).collect()
+        (0..36).collect()
     }
 }
