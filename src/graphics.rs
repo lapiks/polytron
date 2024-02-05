@@ -144,6 +144,7 @@ impl<'a> Graphics<'a> {
         ;
         if previous_dc.map_or(true, |draw_call| {
             draw_call.model != *transform ||
+            draw_call.view_proj != self.data.view_proj ||
             draw_call.primitive != primitive
         }) {
             // start a new draw call
@@ -163,6 +164,8 @@ impl<'a> Graphics<'a> {
                 self.data.draw_calls[self.data.draw_calls_count].vertices = vertices.clone();
                 self.data.draw_calls[self.data.draw_calls_count].indices = indices.clone();
                 self.data.draw_calls[self.data.draw_calls_count].model = *transform;
+                self.data.draw_calls[self.data.draw_calls_count].view_proj = self.data.view_proj;
+                self.data.draw_calls[self.data.draw_calls_count].primitive = primitive;
             }
     
             self.data.draw_calls_count += 1;
