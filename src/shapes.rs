@@ -1,67 +1,210 @@
-use crate::graphics::Vertex;
+use crate::{color::Color, graphics::Vertex};
 
 pub struct Cube {}
 
 impl Cube {
-    pub fn vertices() -> Vec<Vertex> {
+    pub fn vertices(color: Color) -> Vec<Vertex> {
+        let p0 = [-0.5, -0.5, -0.5];
+        let p1 = [0.5, -0.5, -0.5];
+        let p2 = [-0.5, 0.5, -0.5];
+        let p3 = [0.5, 0.5, -0.5];
+        let p4 = [-0.5, -0.5, 0.5];
+        let p5 = [0.5, -0.5, 0.5];
+        let p6 = [-0.5, 0.5, 0.5];
+        let p7 = [0.5, 0.5, 0.5];
+
+
         vec![
+            // face 1 -z
             Vertex {
-                position: [-0.5, -0.5, -0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p0,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: [0.5, -0.5, -0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p1,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: [-0.5, 0.5, -0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p2,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: [0.5, 0.5, -0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p1,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: [-0.5, -0.5, 0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p3,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: [0.5, -0.5, 0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p2,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
+            },
+            // face 2 +z
+            Vertex {
+                position: p4,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
             },
             Vertex {
-                position: [-0.5, 0.5, 0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
             },
             Vertex {
-                position: [0.5, 0.5, 0.5],
-                color: [1.0, 0.0, 0.0, 1.0],
-                normal: [0.0, 0.0, 0.0],
+                position: p6,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: p7,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: p6,
+                color: color.as_array(),
+                normal: [0.0, 0.0, 1.0],
+            },
+            // face 3 -x
+            Vertex {
+                position: p0,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p2,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p6,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, -1.0],
+            },
+            Vertex {
+                position: p4,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p0,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p6,
+                color: color.as_array(),
+                normal: [-1.0, 0.0, 0.0],
+            },
+            // face 4 +x
+            Vertex {
+                position: p1,
+                color: color.as_array(),
+                normal: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p7,
+                color: color.as_array(),
+                normal: [1.0, 0.0, -1.0],
+            },
+            Vertex {
+                position: p1,
+                color: color.as_array(),
+                normal: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p3,
+                color: color.as_array(),
+                normal: [1.0, 0.0, 0.0],
+            },
+            Vertex {
+                position: p7,
+                color: color.as_array(),
+                normal: [1.0, 0.0, 0.0],
+            },
+            // face 4 -y
+            Vertex {
+                position: p4,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
+                position: p0,
+                color: color.as_array(),
+                normal: [0.0, -1.0, -1.0],
+            },
+            Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
+                position: p1,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
+                position: p0,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            // face 4 +y
+            Vertex {
+                position: p3,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: p2,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: p7,
+                color: color.as_array(),
+                normal: [0.0, 1.0, -1.0],
+            },
+            Vertex {
+                position: p2,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: p6,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: p7,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
             },
         ]
     }
 
     pub fn indices() -> Vec<i32> {
-        vec![
-            0, 1, 2, 
-            1, 3, 2,
-            0, 5, 1,
-            0, 4, 5,
-            2, 7, 3,
-            2, 6, 7,
-            5, 7, 6,
-            4, 5, 6,
-            1, 3, 7,
-            5, 1, 7,
-            0, 2, 6,
-            0, 6, 4,
-        ]
+        (0..35).collect()
     }
 }

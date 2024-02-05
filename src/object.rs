@@ -1,6 +1,6 @@
 use glam::{Mat4, Vec3};
 
-use crate::{graphics::Vertex, shapes::Cube};
+use crate::{color::Color, graphics::Vertex, shapes::Cube};
 
 pub struct Object {
     vertices: Vec<Vertex>,
@@ -27,9 +27,9 @@ impl Object {
         }
     }
 
-    pub fn new_cube() -> Self {
+    pub fn new_cube(color: Color) -> Self {
         Self {
-            vertices: Cube::vertices(),
+            vertices: Cube::vertices(color),
             indices: Cube::indices(),
             transform: Mat4::IDENTITY,
         }

@@ -93,6 +93,8 @@ impl Renderer {
             offscreen_shader,
             PipelineParams {
                 primitive_type: PrimitiveType::Triangles,
+                depth_write: true,
+                depth_test: Comparison::LessOrEqual,
                 ..Default::default()
             }
         );

@@ -17,7 +17,7 @@ impl Default for Game {
             time_step: Default::default() ,
             camera_3d: Camera3d::new(),
             camera_2d: Camera2d::new(),
-            cube: Object::new_cube(),
+            cube: Object::new_cube(Color::red()),
         }
     }
 }
