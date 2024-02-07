@@ -14,7 +14,7 @@ pub struct Game {
 impl Default for Game {
     fn default() -> Self {
         Self { 
-            time_step: Default::default() ,
+            time_step: Default::default(),
             camera_3d: Camera3d::new(),
             camera_2d: Camera2d::new(),
             cube: Object::new_cube(Color::red()),
