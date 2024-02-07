@@ -246,24 +246,28 @@ mod offscreen_shader {
     use miniquad::*;
 
     pub const VERTEX: &str = r#"#version 100
-    attribute vec3 in_pos;
-    attribute vec4 in_color;
+        attribute vec3 in_pos;
+        attribute vec4 in_color;
+        attribute vec3 in_normal;
 
-    uniform mat4 mvp;
+        uniform mat4 mvp;
 
-    varying lowp vec4 color;
+        flat varying lowp vec4 color;
 
-    void main() {
-        gl_Position = mvp * vec4(in_pos, 1.0);
-        color = in_color;
-    }"#;
+        void main() {
+            vec3 light_dir = normalize(vec3(1.0, 1.0, -1.0));
+            vec3 ambient = in_color.xyz * 0.2;
+            vec3 diffuse = dot(light_dir, in_normal) * in_color.xyz;
+            color = vec4(ambient + diffuse, 1.0);
+            gl_Position = mvp * vec4(in_pos, 1.0);
+        }"#;
 
     pub const FRAGMENT: &str = r#"#version 100
-    varying lowp vec4 color;
+        flat varying lowp vec4 color;
 
-    void main() {
-        gl_FragColor = color;
-    }"#;
+        void main() {
+            gl_FragColor = color;
+        }"#;
 
     pub fn meta() -> ShaderMeta {
         ShaderMeta {
