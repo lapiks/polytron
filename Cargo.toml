@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-miniquad = "0.4.0-alpha.10"
+egui = { version = "0.22.0", features = ["bytemuck"] }
+egui-miniquad = { git = "https://github.com/not-fl3/egui-miniquad.git", branch = "miniquad_0.4" }
+miniquad = "0.4.0-alpha.9"
 glam = "0.25.0"

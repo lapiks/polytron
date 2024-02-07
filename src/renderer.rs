@@ -1,7 +1,8 @@
+use egui_miniquad::EguiMq;
 use glam::Mat4;
 use miniquad::*;
 
-use crate::graphics::Vertex;
+use crate::{graphics::Vertex, gui::Gui};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Primitive {
@@ -46,6 +47,7 @@ pub struct Renderer {
     pipelines: [Pipeline; 2],
     offscreen_pass: RenderPass,
     ctx: Box<dyn RenderingBackend>,
+    egui_mq: egui_miniquad::EguiMq,
 }
 
 impl Renderer {
@@ -164,6 +166,7 @@ impl Renderer {
             display_bind,
             pipelines,
             offscreen_pass,
+            egui_mq: egui_miniquad::EguiMq::new(&mut *ctx),
             ctx,
         }
     }
@@ -221,17 +224,46 @@ impl Renderer {
         }
 
         self.ctx.end_render_pass();
-        
 
-        // display pass
-        self.ctx.begin_default_pass(Default::default());
+        // draw to fullscreen quad
+        {
+            // display pass
+            //self.ctx.begin_default_pass(Default::default());
+            //self.ctx.apply_pipeline(&self.display_pipeline);
+            //self.ctx.apply_bindings(&self.display_bind);
+            //self.ctx.draw(0, 6, 1);
+            //self.ctx.end_render_pass();
+        }
+    }
 
-        self.ctx.apply_pipeline(&self.display_pipeline);
-        self.ctx.apply_bindings(&self.display_bind);
-        self.ctx.draw(0, 6, 1);
+    pub fn draw_ui(&mut self, gui: &mut Gui) {
+        let mq_texture = self.ctx.render_pass_texture(self.offscreen_pass);
+        // create egui TextureId from Miniquad GL texture Id
+        let raw_id = match unsafe { self.ctx.texture_raw_id(mq_texture) } {
+            miniquad::RawId::OpenGl(id) => id as u64,
+        };
+        let egui_texture_id = egui::TextureId::User(raw_id);
+
+        // prepare drawing the ui by clearing background
+        self.ctx.begin_default_pass(
+            miniquad::PassAction::clear_color(0.0, 0.0, 0.0, 1.0)
+        );
         self.ctx.end_render_pass();
 
+        // run the ui code
+        self.egui_mq.run(&mut *self.ctx, |_mq_ctx, egui_ctx| {
+            gui.draw(egui_ctx, egui_texture_id);
+        });
+
+        self.egui_mq.draw(&mut *self.ctx);
+    }
+
+    pub fn commit_frame(&mut self) {
         self.ctx.commit_frame();
+    }
+
+    pub fn egui_mq_mut(&mut self) -> &mut EguiMq {
+        &mut self.egui_mq
     }
 
     fn get_pipeline(&self, primitive: Primitive) -> Pipeline {

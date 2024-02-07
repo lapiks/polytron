@@ -7,6 +7,7 @@ mod time;
 mod shapes;
 mod color;
 mod light;
+mod gui;
 
 use crate::console::Console;
 
