@@ -1,8 +1,14 @@
 use std::f32::consts::PI;
 
-use glam::{vec3, Mat4, Vec2, Vec3};
+use glam::{vec2, vec3, Mat4, Vec2, Vec3};
 
 use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData}};
+
+#[derive(Clone, Copy, PartialEq)]
+pub struct Rect2d {
+    pub position: Vec2,
+    pub size: Vec2,
+}
 
 #[derive(Clone)]
 #[repr(C)]
@@ -15,11 +21,13 @@ pub struct Vertex {
 pub trait Camera {
     fn view_proj(&self) -> Mat4;
     fn mode(&self) -> Mode;
+    fn viewport(&self) -> &Rect2d;
 }
 
 pub struct Camera3d {
     transform: Mat4,
     projection: Mat4,
+    viewport: Rect2d,
 }
 
 impl Camera for Camera3d {
@@ -29,6 +37,10 @@ impl Camera for Camera3d {
 
     fn mode(&self) -> Mode {
         Mode::Mode3d
+    }
+
+    fn viewport(&self) -> &Rect2d {
+        &self.viewport
     }
 }
 
@@ -40,9 +52,18 @@ impl Camera3d {
         Self {
             transform,
             projection,
+            viewport: Rect2d {
+                position: vec2(0.0, 0.0),
+                size: vec2(1.0, 1.0)
+            }
         }
     }
 
+    pub fn with_viewport(mut self, viewport: &Rect2d) -> Self {
+        self.viewport = *viewport;
+        self
+    }
+    
     pub fn with_transform(mut self, transform: &Mat4) -> Self {
         self.transform = *transform;
         self
@@ -70,6 +91,11 @@ impl Camera3d {
 
     pub fn with_scale(&mut self, scale: Vec3) -> &mut Self {
         self.transform = Mat4::from_scale(scale) * self.transform;
+        self
+    }
+
+    pub fn set_viewport(&mut self, viewport: &Rect2d) -> &mut Self {
+        self.viewport = *viewport;
         self
     }
 
@@ -102,6 +128,7 @@ impl Camera3d {
 pub struct Camera2d {
     transform: Mat4,
     projection: Mat4,
+    viewport: Rect2d,
 }
 
 impl Camera for Camera2d {
@@ -111,6 +138,10 @@ impl Camera for Camera2d {
 
     fn mode(&self) -> Mode {
         Mode::Mode2d
+    }
+
+    fn viewport(&self) -> &Rect2d {
+        &self.viewport
     }
 }
 
@@ -122,7 +153,16 @@ impl Camera2d {
         Self {
             transform,
             projection,
+            viewport: Rect2d {
+                position: vec2(0.0, 0.0),
+                size: vec2(1.0, 1.0)
+            }
         }
+    }
+
+    pub fn with_viewport(mut self, viewport: &Rect2d) -> Self {
+        self.viewport = *viewport;
+        self
     }
 }
 
@@ -134,22 +174,26 @@ impl<'a> Graphics<'a> {
     pub fn set_camera(&mut self, camera: &dyn Camera) -> &mut Self {
         self.data.view_proj = camera.view_proj();
         self.data.mode = camera.mode();
+        self.data.viewport = *camera.viewport();
         self
     }
 
     pub fn draw_object(&mut self, object: &Object) -> &mut Self {
         let mode = self.data.mode;
+        let viewport = self.data.viewport;
         self.new_draw_call(
             object.vertices(),
             object.indices(),
             object.transform(),
             Primitive::Triangles,
             mode,
+            &viewport,
         )
     }
 
     pub fn draw_line(&mut self, p1: Vec3, p2: Vec3, color: Color) -> &mut Self {
         let mode = self.data.mode;
+        let viewport = self.data.viewport;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -169,11 +213,13 @@ impl<'a> Graphics<'a> {
             &Mat4::IDENTITY,
             Primitive::Lines,
             mode,
+            &viewport,
         )
     }
 
     pub fn draw_rectangle(&mut self, position: Vec2, size: Vec2, color: Color) -> &mut Self {
         let mode = self.data.mode;
+        let viewport = self.data.viewport;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -203,10 +249,19 @@ impl<'a> Graphics<'a> {
             &Mat4::IDENTITY,
             Primitive::Triangles,
             mode,
+            &viewport,
         )
     }
 
-    fn new_draw_call(&mut self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive, mode: Mode) -> &mut Self {
+    fn new_draw_call(
+        &mut self, 
+        vertices: &Vec<Vertex>, 
+        indices: &Vec<i32>, 
+        transform: &Mat4, 
+        primitive: Primitive, 
+        mode: Mode,
+        viewport: &Rect2d,
+    ) -> &mut Self {
         let previous_dc = if self.data.draw_calls_count == 0 {
             None
         } else {
@@ -217,7 +272,8 @@ impl<'a> Graphics<'a> {
             draw_call.model != *transform ||
             draw_call.view_proj != self.data.view_proj ||
             draw_call.primitive != primitive ||
-            draw_call.mode != mode
+            draw_call.mode != mode ||
+            draw_call.viewport != *viewport
         }) {
             // start a new draw call
             if self.data.draw_calls.len() <= self.data.draw_calls_count {
@@ -230,6 +286,7 @@ impl<'a> Graphics<'a> {
                         view_proj: self.data.view_proj,
                         primitive,
                         mode,
+                        viewport: *viewport,
                     }
                 );
             } else {
@@ -240,6 +297,7 @@ impl<'a> Graphics<'a> {
                 self.data.draw_calls[self.data.draw_calls_count].view_proj = self.data.view_proj;
                 self.data.draw_calls[self.data.draw_calls_count].primitive = primitive;
                 self.data.draw_calls[self.data.draw_calls_count].mode = mode;
+                self.data.draw_calls[self.data.draw_calls_count].viewport = *viewport;
             }
     
             self.data.draw_calls_count += 1;

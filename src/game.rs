@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec2, vec3};
 
-use crate::{color::Color, console::System, graphics::{Camera2d, Camera3d, Graphics}, object::Object, time::TimeStep};
+use crate::{color::Color, console::System, graphics::{Camera2d, Camera3d, Graphics, Rect2d}, object::Object, time::TimeStep};
 
 pub struct Game {
     time_step: TimeStep,
@@ -16,8 +16,8 @@ impl Default for Game {
     fn default() -> Self {
         Self { 
             time_step: Default::default(),
-            camera_3d: Camera3d::new(),
-            camera_2d: Camera2d::new(),
+            camera_3d: Camera3d::new().with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)}),
+            camera_2d: Camera2d::new().with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)}),
             cube: Object::new_cube(Color::red()),
             plane: Object::new_plane(Color::white()),
         }

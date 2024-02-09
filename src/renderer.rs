@@ -1,8 +1,10 @@
 use egui_miniquad::EguiMq;
-use glam::Mat4;
+use glam::{uvec2, vec2, Mat4, UVec2};
 use miniquad::*;
 
-use crate::{graphics::Vertex, gui::Gui};
+use crate::{graphics::{Rect2d, Vertex}, gui::Gui};
+
+const RESOLUTION: UVec2 = uvec2(320, 200);
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Primitive {
@@ -22,6 +24,7 @@ pub struct RendererData {
     pub draw_calls_count: usize,
     pub view_proj: Mat4,
     pub mode: Mode,
+    pub viewport: Rect2d,
 }
 
 impl RendererData {
@@ -32,6 +35,10 @@ impl RendererData {
             draw_calls_count: 0,
             view_proj: Mat4::IDENTITY,
             mode: Mode::Mode3d,
+            viewport: Rect2d {
+                position: vec2(0.0, 0.0),
+                size: vec2(1.0, 1.0)
+            }
         }
     }
 
@@ -47,6 +54,7 @@ pub struct DrawCall {
     pub view_proj: Mat4,
     pub primitive: Primitive,
     pub mode: Mode,
+    pub viewport: Rect2d,
 }
 
 /// The console renderer
@@ -69,16 +77,16 @@ impl Renderer {
         let mut ctx: Box<dyn RenderingBackend> = window::new_rendering_backend();
 
         let color_img = ctx.new_render_texture(TextureParams {
-            width: 320,
-            height: 200,
+            width: RESOLUTION.x,
+            height: RESOLUTION.y,
             format: TextureFormat::RGBA8,
             min_filter: FilterMode::Nearest,
             mag_filter: FilterMode::Nearest,
             ..Default::default()
         });
         let depth_img = ctx.new_render_texture(TextureParams {
-            width: 320,
-            height: 200,
+            width: RESOLUTION.x,
+            height: RESOLUTION.y,
             format: TextureFormat::Depth,
             ..Default::default()
         });
@@ -274,9 +282,17 @@ impl Renderer {
                     view_proj: draw.view_proj,
                 };
 
-            self.ctx.apply_pipeline(&self.get_pipeline(draw.primitive, draw.mode));
+            self.ctx.apply_pipeline(
+                &self.get_pipeline(draw.primitive, draw.mode)
+            );
             self.ctx.apply_bindings(bindings);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
+            self.ctx.apply_viewport(
+                (draw.viewport.position.x * RESOLUTION.x as f32) as i32, 
+                (draw.viewport.position.y * RESOLUTION.y as f32) as i32,
+                (draw.viewport.size.x * RESOLUTION.x as f32) as i32, 
+                (draw.viewport.size.y * RESOLUTION.y as f32) as i32,
+            );
             self.ctx.draw(0, draw.indices.len() as i32, 1);
         }
 
