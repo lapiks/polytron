@@ -49,6 +49,8 @@ impl System for Game {
         .set_camera(&self.camera_3d)
         .draw_object(&self.cube)
         .draw_object(&self.plane)
+        .draw_rectangle(vec2(-1.0, -1.0), vec2(2.0, 2.0), Color::blue())
+        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
         .set_camera(&self.camera_2d)
         .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
         .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 0.25), Color::gray());

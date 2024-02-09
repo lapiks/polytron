@@ -21,6 +21,7 @@ pub struct RendererData {
     pub draw_calls_binding: Vec<Bindings>,
     pub draw_calls_count: usize,
     pub view_proj: Mat4,
+    pub mode: Mode,
 }
 
 impl RendererData {
@@ -30,6 +31,7 @@ impl RendererData {
             draw_calls_binding: Vec::with_capacity(100),
             draw_calls_count: 0,
             view_proj: Mat4::IDENTITY,
+            mode: Mode::Mode3d,
         }
     }
 

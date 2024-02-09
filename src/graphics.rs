@@ -14,6 +14,7 @@ pub struct Vertex {
 
 pub trait Camera {
     fn view_proj(&self) -> Mat4;
+    fn mode(&self) -> Mode;
 }
 
 pub struct Camera3d {
@@ -24,6 +25,10 @@ pub struct Camera3d {
 impl Camera for Camera3d {
     fn view_proj(&self) -> Mat4 {
         self.projection * self.transform.inverse()
+    }
+
+    fn mode(&self) -> Mode {
+        Mode::Mode3d
     }
 }
 
@@ -103,6 +108,10 @@ impl Camera for Camera2d {
     fn view_proj(&self) -> Mat4 {
         self.projection * self.transform
     }
+
+    fn mode(&self) -> Mode {
+        Mode::Mode2d
+    }
 }
 
 impl Camera2d {
@@ -124,20 +133,23 @@ pub struct Graphics<'a> {
 impl<'a> Graphics<'a> {
     pub fn set_camera(self, camera: &dyn Camera) -> Self {
         self.data.view_proj = camera.view_proj();
+        self.data.mode = camera.mode();
         self
     }
 
     pub fn draw_object(self, object: &Object) -> Self {
+        let mode = self.data.mode;
         self.new_draw_call(
             object.vertices(),
             object.indices(),
             object.transform(),
             Primitive::Triangles,
-            Mode::Mode3d,
+            mode,
         )
     }
 
     pub fn draw_line(self, p1: Vec2, p2: Vec2, color: Color) -> Self {
+        let mode = self.data.mode;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -156,11 +168,12 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Lines,
-            Mode::Mode2d,
+            mode,
         )
     }
 
     pub fn draw_rectangle(self, position: Vec2, size: Vec2, color: Color) -> Self {
+        let mode = self.data.mode;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -189,7 +202,7 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Triangles,
-            Mode::Mode2d,
+            mode,
         )
     }
 
