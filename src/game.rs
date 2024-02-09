@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use glam::vec2;
+use glam::{vec2, vec3};
 
 use crate::{color::Color, console::System, graphics::{Camera2d, Camera3d, Graphics}, object::Object, time::TimeStep};
 
@@ -9,6 +9,7 @@ pub struct Game {
     camera_3d: Camera3d,
     camera_2d: Camera2d,
     cube: Object,
+    plane: Object,
 }
 
 impl Default for Game {
@@ -18,6 +19,7 @@ impl Default for Game {
             camera_3d: Camera3d::new(),
             camera_2d: Camera2d::new(),
             cube: Object::new_cube(Color::red()),
+            plane: Object::new_plane(Color::white()),
         }
     }
 }
@@ -30,7 +32,9 @@ impl Game {
 
 impl System for Game {
     fn init(&mut self) {
-        
+        self.plane
+        .translate(vec3(0.0, -1.0, 0.0))
+        .scale(vec3(10.0, 10.0, 10.0));
     }
 
     fn update(&mut self) {
@@ -43,9 +47,10 @@ impl System for Game {
     fn draw(&self, g: Graphics) {
         g
         .set_camera(&self.camera_3d)
-        .draw(&self.cube)
+        .draw_object(&self.cube)
+        .draw_object(&self.plane)
         .set_camera(&self.camera_2d)
         .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
-        .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 2.0), Color::gray());
+        .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 0.25), Color::gray());
     }
 }

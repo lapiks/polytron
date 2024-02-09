@@ -283,11 +283,11 @@ impl Renderer {
         // draw to fullscreen quad
         {
             // display pass
-            //self.ctx.begin_default_pass(Default::default());
-            //self.ctx.apply_pipeline(&self.display_pipeline);
-            //self.ctx.apply_bindings(&self.display_bind);
-            //self.ctx.draw(0, 6, 1);
-            //self.ctx.end_render_pass();
+            self.ctx.begin_default_pass(Default::default());
+            self.ctx.apply_pipeline(&self.display_pipeline);
+            self.ctx.apply_bindings(&self.display_bind);
+            self.ctx.draw(0, 6, 1);
+            self.ctx.end_render_pass();
         }
     }
 

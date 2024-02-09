@@ -208,3 +208,39 @@ impl Cube {
         (0..36).collect()
     }
 }
+
+pub struct Plane {}
+
+impl Plane {
+    pub fn vertices(color: Color) -> Vec<Vertex> {
+        let normal = [0.0, 1.0, 0.0];
+        let color = color.as_array();
+
+        vec![
+            Vertex {
+                position: [-0.5, 0.0, -0.5],
+                color,
+                normal,
+            },
+            Vertex {
+                position: [0.5, 0.0, -0.5],
+                color,
+                normal,
+            },
+            Vertex {
+                position: [-0.5, 0.0, 0.5],
+                color,
+                normal,
+            },
+            Vertex {
+                position: [0.5, 0.0, 0.5],
+                color,
+                normal,
+            },
+        ]
+    }
+
+    pub fn indices() -> Vec<i32> {
+        vec![0, 2, 1, 1, 2, 3]
+    }
+}

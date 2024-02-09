@@ -39,6 +39,7 @@ impl EventHandler for Console {
     fn update(&mut self) {
         if !self.game_init {
             self.game.init();
+            self.game_init = true;
         }
 
         self.game.update();
@@ -53,7 +54,7 @@ impl EventHandler for Console {
             }
         );
         self.renderer.draw(&mut self.data);
-        self.renderer.draw_ui(&mut self.gui);
+        //self.renderer.draw_ui(&mut self.gui);
         self.renderer.commit_frame();
     }
 

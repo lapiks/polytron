@@ -72,7 +72,7 @@ impl<'a> Graphics<'a> {
         self
     }
 
-    pub fn draw(self, object: &Object) -> Self {
+    pub fn draw_object(self, object: &Object) -> Self {
         self.new_draw_call(
             object.vertices(),
             object.indices(),

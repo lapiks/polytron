@@ -1,6 +1,6 @@
 use glam::{Mat4, Vec3};
 
-use crate::{color::Color, graphics::Vertex, shapes::Cube};
+use crate::{color::Color, graphics::Vertex, shapes::{Cube, Plane}};
 
 pub struct Object {
     vertices: Vec<Vertex>,
@@ -31,6 +31,14 @@ impl Object {
         Self {
             vertices: Cube::vertices(color),
             indices: Cube::indices(),
+            transform: Mat4::IDENTITY,
+        }
+    }
+
+    pub fn new_plane(color: Color) -> Self {
+        Self {
+            vertices: Plane::vertices(color),
+            indices: Plane::indices(),
             transform: Mat4::IDENTITY,
         }
     }
