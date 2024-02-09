@@ -44,7 +44,7 @@ impl System for Game {
         .rotate_y((PI / 4.0) * dt);
     }
 
-    fn draw(&self, g: Graphics) {
+    fn draw(&self, g: &mut Graphics) {
         g
         .set_camera(&self.camera_3d)
         .draw_object(&self.cube)

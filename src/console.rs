@@ -5,7 +5,7 @@ use crate::{game::Game, graphics::Graphics, gui::Gui, renderer::{Renderer, Rende
 pub trait System {
     fn init(&mut self);
     fn update(&mut self);
-    fn draw(&self, g: Graphics);
+    fn draw(&self, g: &mut Graphics);
     fn mouse_motion(&mut self, x: f32, y: f32) {}
     fn mouse_wheel(&mut self, dx: f32, dy: f32) {}
     fn mouse_button_down(&mut self, mb: miniquad::MouseButton, x: f32, y: f32) {}
@@ -55,7 +55,7 @@ impl EventHandler for Console {
         self.data.begin_frame();
 
         self.game.draw(
-            Graphics {
+            &mut Graphics {
                 data: &mut self.data
             }
         );

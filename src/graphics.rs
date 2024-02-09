@@ -131,13 +131,13 @@ pub struct Graphics<'a> {
 }
 
 impl<'a> Graphics<'a> {
-    pub fn set_camera(self, camera: &dyn Camera) -> Self {
+    pub fn set_camera(&mut self, camera: &dyn Camera) -> &mut Self {
         self.data.view_proj = camera.view_proj();
         self.data.mode = camera.mode();
         self
     }
 
-    pub fn draw_object(self, object: &Object) -> Self {
+    pub fn draw_object(&mut self, object: &Object) -> &mut Self {
         let mode = self.data.mode;
         self.new_draw_call(
             object.vertices(),
@@ -148,7 +148,7 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn draw_line(self, p1: Vec2, p2: Vec2, color: Color) -> Self {
+    pub fn draw_line(&mut self, p1: Vec2, p2: Vec2, color: Color) -> &mut Self {
         let mode = self.data.mode;
         self.new_draw_call(
             &vec![
@@ -172,7 +172,7 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn draw_rectangle(self, position: Vec2, size: Vec2, color: Color) -> Self {
+    pub fn draw_rectangle(&mut self, position: Vec2, size: Vec2, color: Color) -> &mut Self {
         let mode = self.data.mode;
         self.new_draw_call(
             &vec![
@@ -206,7 +206,7 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive, mode: Mode) -> Self {
+    fn new_draw_call(&mut self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive, mode: Mode) -> &mut Self {
         let previous_dc = if self.data.draw_calls_count == 0 {
             None
         } else {
