@@ -10,6 +10,12 @@ pub enum Primitive {
     Triangles,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum Mode {
+    Mode2d,
+    Mode3d,
+}
+
 pub struct RendererData {
     pub draw_calls: Vec<DrawCall>,
     pub draw_calls_binding: Vec<Bindings>,
@@ -38,21 +44,24 @@ pub struct DrawCall {
     pub model: Mat4,
     pub view_proj: Mat4,
     pub primitive: Primitive,
+    pub mode: Mode,
 }
 
 /// The console renderer
 pub struct Renderer {
     display_pipeline: Pipeline,
     display_bind: Bindings,
-    pipelines: [Pipeline; 2],
+    pipelines: [Pipeline; 4],
     offscreen_pass: RenderPass,
     ctx: Box<dyn RenderingBackend>,
     egui_mq: egui_miniquad::EguiMq,
 }
 
 impl Renderer {
-    const TRIANGLES_PIPELINE: usize = 0;
-    const LINES_PIPELINE: usize = 1;
+    const TRIANGLES_PIPELINE_3D: usize = 0;
+    const LINES_PIPELINE_3D: usize = 1;
+    const TRIANGLES_PIPELINE_2D: usize = 2;
+    const LINES_PIPELINE_2D: usize = 3;
 
     pub fn new() -> Renderer {
         let mut ctx: Box<dyn RenderingBackend> = window::new_rendering_backend();
@@ -75,24 +84,34 @@ impl Renderer {
         // offscreen
         let offscreen_pass = ctx.new_render_pass(color_img, Some(depth_img));
 
-        let offscreen_shader = ctx
+        let shader_3d = ctx
             .new_shader(
                 ShaderSource::Glsl {
-                    vertex: offscreen_shader::VERTEX,
-                    fragment: offscreen_shader::FRAGMENT,
+                    vertex: shader_3d::VERTEX,
+                    fragment: shader_3d::FRAGMENT,
                 },
-                offscreen_shader::meta(),
+                shader_3d::meta(),
             )
             .unwrap();
 
-        let triangles_pipeline = ctx.new_pipeline_with_params(
+        let shader_2d = ctx
+            .new_shader(
+                ShaderSource::Glsl {
+                    vertex: shader_2d::VERTEX,
+                    fragment: shader_2d::FRAGMENT,
+                },
+                shader_2d::meta(),
+            )
+            .unwrap();
+
+        let triangles_pipeline_3d = ctx.new_pipeline_with_params(
             &[BufferLayout::default()],
             &[
                 VertexAttribute::new("in_pos", VertexFormat::Float3),
                 VertexAttribute::new("in_color", VertexFormat::Float4),
                 VertexAttribute::new("in_normal", VertexFormat::Float3),
             ],
-            offscreen_shader,
+            shader_3d,
             PipelineParams {
                 primitive_type: PrimitiveType::Triangles,
                 depth_write: true,
@@ -101,21 +120,56 @@ impl Renderer {
             }
         );
 
-        let lines_pipeline = ctx.new_pipeline_with_params(
+        let lines_pipeline_3d = ctx.new_pipeline_with_params(
             &[BufferLayout::default()],
             &[
                 VertexAttribute::new("in_pos", VertexFormat::Float3),
                 VertexAttribute::new("in_color", VertexFormat::Float4),
                 VertexAttribute::new("in_normal", VertexFormat::Float3),
             ],
-            offscreen_shader,
+            shader_3d,
             PipelineParams {
                 primitive_type: PrimitiveType::Lines,
                 ..Default::default()
             }
         );
 
-        let pipelines = [triangles_pipeline, lines_pipeline];
+        let triangles_pipeline_2d = ctx.new_pipeline_with_params(
+            &[BufferLayout::default()],
+            &[
+                VertexAttribute::new("in_pos", VertexFormat::Float3),
+                VertexAttribute::new("in_color", VertexFormat::Float4),
+                VertexAttribute::new("in_normal", VertexFormat::Float3),
+            ],
+            shader_2d,
+            PipelineParams {
+                primitive_type: PrimitiveType::Triangles,
+                depth_write: true,
+                depth_test: Comparison::LessOrEqual,
+                ..Default::default()
+            }
+        );
+
+        let lines_pipeline_2d = ctx.new_pipeline_with_params(
+            &[BufferLayout::default()],
+            &[
+                VertexAttribute::new("in_pos", VertexFormat::Float3),
+                VertexAttribute::new("in_color", VertexFormat::Float4),
+                VertexAttribute::new("in_normal", VertexFormat::Float3),
+            ],
+            shader_2d,
+            PipelineParams {
+                primitive_type: PrimitiveType::Lines,
+                ..Default::default()
+            }
+        );
+
+        let pipelines = [
+            triangles_pipeline_3d, 
+            lines_pipeline_3d,
+            triangles_pipeline_2d, 
+            lines_pipeline_2d,
+        ];
 
         // display pass
         let quad_vertices = [
@@ -213,12 +267,12 @@ impl Renderer {
                     BufferSource::slice(&draw.indices)
                 );
 
-                let vs_params = offscreen_shader::Uniforms {
+                let vs_params = shader_3d::Uniforms {
                     model: draw.model,
                     view_proj: draw.view_proj,
                 };
 
-            self.ctx.apply_pipeline(&self.get_pipeline(draw.primitive));
+            self.ctx.apply_pipeline(&self.get_pipeline(draw.primitive, draw.mode));
             self.ctx.apply_bindings(bindings);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
             self.ctx.draw(0, draw.indices.len() as i32, 1);
@@ -267,15 +321,26 @@ impl Renderer {
         &mut self.egui_mq
     }
 
-    fn get_pipeline(&self, primitive: Primitive) -> Pipeline {
-        match primitive {
-            Primitive::Lines => self.pipelines[Self::LINES_PIPELINE],
-            Primitive::Triangles => self.pipelines[Self::TRIANGLES_PIPELINE],
+    fn get_pipeline(&self, primitive: Primitive, mode: Mode) -> Pipeline {
+        match mode {
+            Mode::Mode3d => {
+                match primitive {
+                    Primitive::Lines => self.pipelines[Self::LINES_PIPELINE_3D],
+                    Primitive::Triangles => self.pipelines[Self::TRIANGLES_PIPELINE_3D],
+                }
+            },
+            Mode::Mode2d => {
+                match primitive {
+                    Primitive::Lines => self.pipelines[Self::LINES_PIPELINE_2D],
+                    Primitive::Triangles => self.pipelines[Self::TRIANGLES_PIPELINE_2D],
+                }
+            },
         }
+        
     }
 }
 
-mod offscreen_shader {
+mod shader_3d {
     use glam::Mat4;
     use miniquad::*;
 
@@ -323,6 +388,38 @@ mod offscreen_shader {
     pub struct Uniforms {
         pub model: Mat4,
         pub view_proj: Mat4,
+    }
+}
+
+mod shader_2d {
+    use miniquad::*;
+
+    pub const VERTEX: &str = r#"#version 140
+        in vec3 in_pos;
+        in vec4 in_color;
+
+        flat out lowp vec4 polygon_color;
+
+        void main() {
+            polygon_color = in_color;
+            gl_Position = vec4(in_pos, 1.0);
+        }"#;
+
+    pub const FRAGMENT: &str = r#"#version 140
+        flat in lowp vec4 polygon_color;
+        out vec4 color;
+
+        void main() {
+            color = polygon_color;
+        }"#;
+
+    pub fn meta() -> ShaderMeta {
+        ShaderMeta {
+            images: vec![],
+            uniforms: UniformBlockLayout {
+                uniforms: vec![],
+            },
+        }
     }
 }
 

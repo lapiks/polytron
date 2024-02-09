@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec3, Mat4, Vec2};
 
-use crate::{color::Color, object::Object, renderer::{DrawCall, Primitive, RendererData}};
+use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData}};
 
 #[derive(Clone)]
 #[repr(C)]
@@ -78,6 +78,7 @@ impl<'a> Graphics<'a> {
             object.indices(),
             object.transform(),
             Primitive::Triangles,
+            Mode::Mode3d,
         )
     }
 
@@ -100,6 +101,7 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Lines,
+            Mode::Mode2d,
         )
     }
 
@@ -132,10 +134,11 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Triangles,
+            Mode::Mode2d,
         )
     }
 
-    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive) -> Self {
+    fn new_draw_call(self, vertices: &Vec<Vertex>, indices: &Vec<i32>, transform: &Mat4, primitive: Primitive, mode: Mode) -> Self {
         let previous_dc = if self.data.draw_calls_count == 0 {
             None
         } else {
@@ -145,7 +148,8 @@ impl<'a> Graphics<'a> {
         if previous_dc.map_or(true, |draw_call| {
             draw_call.model != *transform ||
             draw_call.view_proj != self.data.view_proj ||
-            draw_call.primitive != primitive
+            draw_call.primitive != primitive ||
+            draw_call.mode != mode
         }) {
             // start a new draw call
             if self.data.draw_calls.len() <= self.data.draw_calls_count {
@@ -157,6 +161,7 @@ impl<'a> Graphics<'a> {
                         model: *transform,
                         view_proj: self.data.view_proj,
                         primitive,
+                        mode,
                     }
                 );
             } else {
@@ -166,6 +171,7 @@ impl<'a> Graphics<'a> {
                 self.data.draw_calls[self.data.draw_calls_count].model = *transform;
                 self.data.draw_calls[self.data.draw_calls_count].view_proj = self.data.view_proj;
                 self.data.draw_calls[self.data.draw_calls_count].primitive = primitive;
+                self.data.draw_calls[self.data.draw_calls_count].mode = mode;
             }
     
             self.data.draw_calls_count += 1;
