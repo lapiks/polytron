@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use glam::{vec3, Mat4, Vec2};
+use glam::{vec3, Mat4, Vec2, Vec3};
 
 use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData}};
 
@@ -36,6 +36,61 @@ impl Camera3d {
             transform,
             projection,
         }
+    }
+
+    pub fn with_transform(mut self, transform: &Mat4) -> Self {
+        self.transform = *transform;
+        self
+    }
+
+    pub fn with_translation(mut self, translation: Vec3) -> Self {
+        self.transform = Mat4::from_translation(translation) * self.transform;
+        self
+    }
+
+    pub fn with_rotation_x(mut self, angle: f32) -> Self {
+        self.transform = Mat4::from_rotation_x(angle) * self.transform;
+        self
+    }
+
+    pub fn with_rotation_y(mut self, angle: f32) -> Self {
+        self.transform = Mat4::from_rotation_y(angle) * self.transform;
+        self
+    }
+
+    pub fn with_rotation_z(mut self, angle: f32) -> Self {
+        self.transform = Mat4::from_rotation_z(angle) * self.transform;
+        self
+    }
+
+    pub fn with_scale(&mut self, scale: Vec3) -> &mut Self {
+        self.transform = Mat4::from_scale(scale) * self.transform;
+        self
+    }
+
+    pub fn translate(&mut self, translation: Vec3) -> &mut Self {
+        self.transform *= Mat4::from_translation(translation);
+        self
+    }
+
+    pub fn rotate_x(&mut self, angle: f32) -> &mut Self {
+        self.transform *= Mat4::from_rotation_x(angle);
+        self
+    }
+
+    pub fn rotate_y(&mut self, angle: f32) -> &mut Self {
+        self.transform *= Mat4::from_rotation_y(angle);
+        self
+    }
+
+    pub fn rotate_z(&mut self, angle: f32) -> &mut Self {
+        self.transform *= Mat4::from_rotation_z(angle);
+        self
+    }
+
+    pub fn scale(&mut self, scale: Vec3) -> &mut Self {
+        self.transform *= Mat4::from_scale(scale);
+        self
     }
 }
 

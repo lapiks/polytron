@@ -53,4 +53,20 @@ impl System for Game {
         .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
         .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 0.25), Color::gray());
     }
+
+    fn key_down(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {
+        let dt = self.time_step.delta_time();
+        let speed = 5.0;
+        self.camera_3d.translate( 
+            match keycode {
+                miniquad::KeyCode::W => vec3(0.0, 0.0, 1.0),
+                miniquad::KeyCode::S => vec3(0.0, 0.0, -1.0),
+                miniquad::KeyCode::D => vec3(1.0, 0.0, 0.0),
+                miniquad::KeyCode::A => vec3(-1.0, 0.0, 0.0),
+                _ => vec3(0.0, 0.0, 0.0)
+            } 
+            * dt
+            * speed
+        );
+    }
 }

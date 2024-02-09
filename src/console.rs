@@ -6,6 +6,12 @@ pub trait System {
     fn init(&mut self);
     fn update(&mut self);
     fn draw(&self, g: Graphics);
+    fn mouse_motion(&mut self, x: f32, y: f32) {}
+    fn mouse_wheel(&mut self, dx: f32, dy: f32) {}
+    fn mouse_button_down(&mut self, mb: miniquad::MouseButton, x: f32, y: f32) {}
+    fn mouse_button_up(&mut self, mb: miniquad::MouseButton, x: f32, y: f32) {}
+    fn key_down(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {}
+    fn key_up(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods) {}
 }
 
 // The Polytron console
@@ -59,24 +65,28 @@ impl EventHandler for Console {
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
+        self.game.mouse_motion(x, y);
         self.renderer
         .egui_mq_mut()
         .mouse_motion_event(x, y);
     }
 
     fn mouse_wheel_event(&mut self, dx: f32, dy: f32) {
+        self.game.mouse_wheel(dx, dy);
         self.renderer
         .egui_mq_mut()
         .mouse_wheel_event(dx, dy);
     }
 
     fn mouse_button_down_event(&mut self, mb: miniquad::MouseButton, x: f32, y: f32) {
+        self.game.mouse_button_down(mb, x, y);
         self.renderer
         .egui_mq_mut()
         .mouse_button_down_event(mb, x, y);
     }
 
     fn mouse_button_up_event(&mut self, mb: miniquad::MouseButton, x: f32, y: f32) {
+        self.game.mouse_button_up(mb, x, y);
         self.renderer
         .egui_mq_mut()
         .mouse_button_up_event(mb, x, y);
@@ -89,12 +99,14 @@ impl EventHandler for Console {
     }
 
     fn key_down_event(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {
+        self.game.key_down(keycode, keymods, _repeat);
         self.renderer
         .egui_mq_mut()
         .key_down_event(keycode, keymods);
     }
 
     fn key_up_event(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods) {
+        self.game.key_up(keycode, keymods);
         self.renderer
         .egui_mq_mut()
         .key_up_event(keycode, keymods);

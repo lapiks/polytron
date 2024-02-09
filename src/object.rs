@@ -48,7 +48,6 @@ impl Object {
         self
     }
 
-
     pub fn with_translation(mut self, translation: Vec3) -> Self {
         self.transform = Mat4::from_translation(translation) * self.transform;
         self
