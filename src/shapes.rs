@@ -22,17 +22,17 @@ impl Cube {
                 normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: p1,
-                color: color.as_array(),
-                normal: [0.0, 0.0, -1.0],
-            },
-            Vertex {
                 position: p2,
                 color: color.as_array(),
                 normal: [0.0, 0.0, -1.0],
             },
             Vertex {
                 position: p1,
+                color: color.as_array(),
+                normal: [0.0, 0.0, -1.0],
+            },
+            Vertex {
+                position: p2,
                 color: color.as_array(),
                 normal: [0.0, 0.0, -1.0],
             },
@@ -42,7 +42,7 @@ impl Cube {
                 normal: [0.0, 0.0, -1.0],
             },
             Vertex {
-                position: p2,
+                position: p1,
                 color: color.as_array(),
                 normal: [0.0, 0.0, -1.0],
             },
@@ -84,14 +84,14 @@ impl Cube {
                 normal: [-1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p2,
+                position: p6,
                 color: color.as_array(),
                 normal: [-1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p6,
+                position: p2,
                 color: color.as_array(),
-                normal: [-1.0, 0.0, -1.0],
+                normal: [-1.0, 0.0, 0.0],
             },
             Vertex {
                 position: p4,
@@ -99,12 +99,12 @@ impl Cube {
                 normal: [-1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p0,
+                position: p6,
                 color: color.as_array(),
                 normal: [-1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p6,
+                position: p0,
                 color: color.as_array(),
                 normal: [-1.0, 0.0, 0.0],
             },
@@ -115,14 +115,14 @@ impl Cube {
                 normal: [1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p5,
+                position: p7,
                 color: color.as_array(),
                 normal: [1.0, 0.0, 0.0],
             },
             Vertex {
-                position: p7,
+                position: p5,
                 color: color.as_array(),
-                normal: [1.0, 0.0, -1.0],
+                normal: [1.0, 0.0, 0.0],
             },
             Vertex {
                 position: p1,
@@ -141,22 +141,7 @@ impl Cube {
             },
             // face 4 -y
             Vertex {
-                position: p4,
-                color: color.as_array(),
-                normal: [0.0, -1.0, 0.0],
-            },
-            Vertex {
-                position: p5,
-                color: color.as_array(),
-                normal: [0.0, -1.0, 0.0],
-            },
-            Vertex {
                 position: p0,
-                color: color.as_array(),
-                normal: [0.0, -1.0, -1.0],
-            },
-            Vertex {
-                position: p5,
                 color: color.as_array(),
                 normal: [0.0, -1.0, 0.0],
             },
@@ -166,33 +151,48 @@ impl Cube {
                 normal: [0.0, -1.0, 0.0],
             },
             Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
                 position: p0,
                 color: color.as_array(),
                 normal: [0.0, -1.0, 0.0],
             },
+            Vertex {
+                position: p5,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
+            Vertex {
+                position: p4,
+                color: color.as_array(),
+                normal: [0.0, -1.0, 0.0],
+            },
             // face 4 +y
+            Vertex {
+                position: p3,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
             Vertex {
                 position: p2,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
             Vertex {
-                position: p3,
-                color: color.as_array(),
-                normal: [0.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: p6,
-                color: color.as_array(),
-                normal: [0.0, 1.0, -1.0],
-            },
-            Vertex {
-                position: p3,
+                position: p7,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },
             Vertex {
                 position: p7,
+                color: color.as_array(),
+                normal: [0.0, 1.0, 0.0],
+            },
+            Vertex {
+                position: p2,
                 color: color.as_array(),
                 normal: [0.0, 1.0, 0.0],
             },

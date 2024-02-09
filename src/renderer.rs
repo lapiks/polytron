@@ -214,7 +214,8 @@ impl Renderer {
                 );
 
                 let vs_params = offscreen_shader::Uniforms {
-                    mvp: draw.view_proj * draw.model,
+                    model: draw.model,
+                    view_proj: draw.view_proj,
                 };
 
             self.ctx.apply_pipeline(&self.get_pipeline(draw.primitive));
@@ -275,68 +276,79 @@ impl Renderer {
 }
 
 mod offscreen_shader {
+    use glam::Mat4;
     use miniquad::*;
 
-    pub const VERTEX: &str = r#"#version 100
-        attribute vec3 in_pos;
-        attribute vec4 in_color;
-        attribute vec3 in_normal;
+    pub const VERTEX: &str = r#"#version 140
+        in vec3 in_pos;
+        in vec4 in_color;
+        in vec3 in_normal;
 
-        uniform mat4 mvp;
+        uniform mat4 model;
+        uniform mat4 view_proj;
 
-        flat varying lowp vec4 color;
+        flat out lowp vec4 polygon_color;
 
         void main() {
-            vec3 light_dir = normalize(vec3(1.0, 1.0, -1.0));
-            vec3 ambient = in_color.xyz * 0.2;
-            vec3 diffuse = dot(light_dir, in_normal) * in_color.xyz;
-            color = vec4(ambient + diffuse, 1.0);
-            gl_Position = mvp * vec4(in_pos, 1.0);
+            vec3 light_color = vec3(1.0);
+            vec3 light_dir = normalize(-vec3(-1.0, -1.0, -1.0));
+            vec3 ambient = 0.2 * light_color;
+            vec3 world_normal = mat3(transpose(inverse(model))) * in_normal;  
+            vec3 diffuse = max(dot(world_normal, light_dir), 0.0) * light_color;
+            polygon_color = vec4((ambient + diffuse) * in_color.xyz, 1.0);
+            gl_Position = view_proj * model * vec4(in_pos, 1.0);
         }"#;
 
-    pub const FRAGMENT: &str = r#"#version 100
-        flat varying lowp vec4 color;
+    pub const FRAGMENT: &str = r#"#version 140
+        flat in lowp vec4 polygon_color;
+        out vec4 color;
 
         void main() {
-            gl_FragColor = color;
+            color = polygon_color;
         }"#;
 
     pub fn meta() -> ShaderMeta {
         ShaderMeta {
             images: vec![],
             uniforms: UniformBlockLayout {
-                uniforms: vec![UniformDesc::new("mvp", UniformType::Mat4)],
+                uniforms: vec![
+                    UniformDesc::new("model", UniformType::Mat4),
+                    UniformDesc::new("view_proj", UniformType::Mat4),
+                ],
             },
         }
     }
 
     #[repr(C)]
     pub struct Uniforms {
-        pub mvp: glam::Mat4,
+        pub model: Mat4,
+        pub view_proj: Mat4,
     }
 }
 
 mod display_shader {
     use miniquad::*;
 
-    pub const VERTEX: &str = r#"#version 100
-    attribute vec2 in_pos;
-    attribute vec2 in_uv;
+    pub const VERTEX: &str = r#"#version 140
+    in vec2 in_pos;
+    in vec2 in_uv;
 
-    varying lowp vec2 uv;
+    out lowp vec2 uv;
 
     void main() {
         gl_Position = vec4(in_pos, 0.0, 1.0);
         uv = in_uv;
     }"#;
 
-    pub const FRAGMENT: &str = r#"#version 100
-    varying lowp vec2 uv;
+    pub const FRAGMENT: &str = r#"#version 140
+    in lowp vec2 uv;
 
     uniform sampler2D tex;
 
+    out vec4 color;
+
     void main() {
-        gl_FragColor = texture2D(tex, uv);
+        color = texture2D(tex, uv);
     }"#;
 
     pub fn meta() -> ShaderMeta {
