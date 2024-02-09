@@ -148,17 +148,17 @@ impl<'a> Graphics<'a> {
         )
     }
 
-    pub fn draw_line(&mut self, p1: Vec2, p2: Vec2, color: Color) -> &mut Self {
+    pub fn draw_line(&mut self, p1: Vec3, p2: Vec3, color: Color) -> &mut Self {
         let mode = self.data.mode;
         self.new_draw_call(
             &vec![
                 Vertex {
-                    position: [p1.x, p1.y, 0.0],
+                    position: p1.to_array(),
                     color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
                 Vertex {
-                    position: [p2.x, p2.y, 0.0],
+                    position: p2.to_array(),
                     color: color.as_array(),
                     normal: [0.0, 0.0, 0.0],
                 },
@@ -244,9 +244,19 @@ impl<'a> Graphics<'a> {
     
             self.data.draw_calls_count += 1;
         } else {
+            let mut new_indices = indices.clone()
+                .iter_mut()
+                .map(|idx| {
+                    *idx + self.data.draw_calls[self.data.draw_calls_count - 1].vertices.len() as i32
+                })
+                .collect();
+
             // complete existing draw call
+            self.data.draw_calls[self.data.draw_calls_count - 1].indices.append(
+                &mut new_indices
+            );
             self.data.draw_calls[self.data.draw_calls_count - 1].vertices.append(&mut vertices.clone());
-            self.data.draw_calls[self.data.draw_calls_count - 1].indices.append(&mut indices.clone());
+
         }
         
         self

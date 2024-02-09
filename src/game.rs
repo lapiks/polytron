@@ -46,13 +46,28 @@ impl System for Game {
 
     fn draw(&self, g: &mut Graphics) {
         g
-        .set_camera(&self.camera_3d)
-        .draw_object(&self.cube)
-        .draw_object(&self.plane)
+        .set_camera(&self.camera_3d);
+
+        for x in -5..6 {
+            g.draw_line(
+                vec3(x as f32, -1.0, -5.0), 
+                vec3(x as f32, -1.0, 5.0), 
+                Color::white()
+            );
+        }
+        for z in -5..6 {
+            g.draw_line(
+                vec3(-5.0, -1.0, z as f32), 
+                vec3(5.0, -1.0, z as f32), 
+                Color::white()
+            );
+        }
+
+        g.draw_object(&self.cube)
         .draw_rectangle(vec2(-1.0, -1.0), vec2(2.0, 2.0), Color::blue())
-        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
+        .draw_line(vec3(-1.0, -1.0, 0.0), vec3(1.0, 1.0, 0.0), Color::green())
         .set_camera(&self.camera_2d)
-        .draw_line(vec2(-1.0, -1.0), vec2(1.0, 1.0), Color::green())
+        .draw_line(vec3(-1.0, -1.0, 0.0), vec3(1.0, 1.0, 0.0), Color::green())
         .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 0.25), Color::gray());
     }
 
