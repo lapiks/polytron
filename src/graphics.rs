@@ -245,8 +245,8 @@ impl<'a> Graphics<'a> {
             self.data.draw_calls_count += 1;
         } else {
             // complete existing draw call
-            self.data.draw_calls[self.data.draw_calls_count].vertices.append(&mut vertices.clone());
-            self.data.draw_calls[self.data.draw_calls_count].indices.append(&mut indices.clone());
+            self.data.draw_calls[self.data.draw_calls_count - 1].vertices.append(&mut vertices.clone());
+            self.data.draw_calls[self.data.draw_calls_count - 1].indices.append(&mut indices.clone());
         }
         
         self
