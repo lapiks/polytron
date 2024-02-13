@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec2, vec3, Mat4, Vec2, Vec3};
 
-use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData, IMAGE_RATIO_XY}};
+use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData, IMAGE_RATIO_XY, IMAGE_RES}};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Rect2d {
@@ -171,7 +171,14 @@ impl Camera for Camera2d {
 impl Camera2d {
     pub fn new() -> Self {
         let transform = Mat4::IDENTITY;
-        let projection = Mat4::IDENTITY;
+        let projection = glam::Mat4::orthographic_rh_gl(
+            0.0, 
+            IMAGE_RES.x as f32, 
+            IMAGE_RES.y as f32, 
+            0.0, 
+            -1.0, 
+            1.0
+        );
 
         Self {
             transform,

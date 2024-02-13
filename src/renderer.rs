@@ -292,15 +292,15 @@ impl Renderer {
                     BufferSource::slice(&draw.indices)
                 );
 
-                let vs_params = shader_3d::Uniforms {
-                    model: draw.model,
-                    view_proj: draw.view_proj,
-                };
-
                 self.ctx.apply_pipeline(
                     &self.get_pipeline(draw.primitive, draw.mode)
                 );
                 self.ctx.apply_bindings(bindings);
+
+                let vs_params = shader_3d::Uniforms {
+                    model: draw.model,
+                    view_proj: draw.view_proj,
+                };
                 self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
 
                 self.ctx.apply_scissor_rect(
@@ -463,17 +463,21 @@ mod shader_3d {
 }
 
 mod shader_2d {
+    use glam::Mat4;
     use miniquad::*;
 
     pub const VERTEX: &str = r#"#version 140
         in vec3 in_pos;
         in vec4 in_color;
 
+        uniform mat4 model;
+        uniform mat4 view_proj;
+
         flat out lowp vec4 polygon_color;
 
         void main() {
             polygon_color = in_color;
-            gl_Position = vec4(in_pos, 1.0);
+            gl_Position = view_proj * vec4(in_pos, 1.0);
         }"#;
 
     pub const FRAGMENT: &str = r#"#version 140
@@ -488,7 +492,10 @@ mod shader_2d {
         ShaderMeta {
             images: vec![],
             uniforms: UniformBlockLayout {
-                uniforms: vec![],
+                uniforms: vec![
+                    UniformDesc::new("model", UniformType::Mat4),
+                    UniformDesc::new("view_proj", UniformType::Mat4),
+                ],
             },
         }
     }

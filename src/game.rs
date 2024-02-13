@@ -14,11 +14,11 @@ pub struct Game {
 
 impl Default for Game {
     fn default() -> Self {
-        let camera_3d = Camera3d::new()
-        .with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)});
-        let camera_2d = Camera2d::new()
-        .with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)})
-        .with_background(Color::new(0.1, 0.1, 0.1, 1.0));
+        let camera_3d = Camera3d::new();
+        //.with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)});
+        let camera_2d = Camera2d::new();
+        //.with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)})
+        //.with_background(Color::new(0.1, 0.1, 0.1, 1.0));
         Self { 
             time_step: Default::default(),
             camera_3d,
@@ -90,8 +90,8 @@ impl System for Game {
         .draw_rectangle(vec2(-1.0, -1.0), vec2(2.0, 2.0), Color::blue())
         .draw_line(vec3(-1.0, -1.0, 0.0), vec3(1.0, 1.0, 0.0), Color::green())
         .set_camera(&self.camera_2d)
-        .draw_line(vec3(-1.0, -1.0, 0.0), vec3(1.0, 1.0, 0.0), Color::green())
-        .draw_rectangle(vec2(-1.0, -1.0), vec2(0.5, 0.25), Color::gray());
+        .draw_line(vec3(0.0, 0.0, 0.0), vec3(320.0, 200.0, 0.0), Color::green())
+        .draw_rectangle(vec2(10.0, 10.0), vec2(100.0, 50.0), Color::gray());
     }
 
     fn key_down(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {
