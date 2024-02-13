@@ -4,7 +4,9 @@ use miniquad::*;
 
 use crate::{color::Color, graphics::{Rect2d, Vertex}, gui::Gui};
 
-const IMAGE_RES: UVec2 = uvec2(320, 200);
+pub const IMAGE_RES: UVec2 = uvec2(320, 200);
+pub const IMAGE_RATIO_XY: f32 = IMAGE_RES.x as f32 / IMAGE_RES.y as f32;
+pub const IMAGE_RATIO_YX: f32 = IMAGE_RES.y as f32 / IMAGE_RES.x as f32;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Primitive {
@@ -338,16 +340,16 @@ impl Renderer {
             self.ctx.begin_default_pass(Default::default());
             self.ctx.apply_pipeline(&self.display_pipeline);
             self.ctx.apply_bindings(&self.display_bind);
-            let scale = if self.screen_res.x > self.screen_res.y {
+            let scale = if self.screen_res.x as f32 / self.screen_res.y as f32 > IMAGE_RATIO_XY {
                 vec3(
-                    (self.screen_res.y as f32 / self.screen_res.x as f32) * (IMAGE_RES.x as f32 / IMAGE_RES.y as f32),
+                    (self.screen_res.y as f32 / self.screen_res.x as f32) * IMAGE_RATIO_XY,
                     1.0, 
                     1.0
                 )
             } else {
                 vec3(
                     1.0,  
-                    (self.screen_res.x as f32 / self.screen_res.y as f32) * (IMAGE_RES.y as f32 / IMAGE_RES.x as f32),
+                    (self.screen_res.x as f32 / self.screen_res.y as f32) * IMAGE_RATIO_YX,
                     1.0
                 )
             };

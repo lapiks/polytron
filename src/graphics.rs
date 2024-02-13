@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec2, vec3, Mat4, Vec2, Vec3};
 
-use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData}};
+use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData, IMAGE_RATIO_XY}};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Rect2d {
@@ -53,7 +53,7 @@ impl Camera for Camera3d {
 impl Camera3d {
     pub fn new() -> Self {
         let transform = Mat4::from_translation(vec3(0.0, 0.0, 5.0));
-        let projection = Mat4::perspective_rh_gl(PI / 4.0, 320.0 / 200.0, 0.01, 100.0);
+        let projection = Mat4::perspective_rh_gl(PI / 4.0, IMAGE_RATIO_XY, 0.01, 100.0);
 
         Self {
             transform,
@@ -68,6 +68,12 @@ impl Camera3d {
 
     pub fn with_viewport(mut self, viewport: &Rect2d) -> Self {
         self.viewport = *viewport;
+        self.projection = Mat4::perspective_rh_gl(
+            PI / 4.0, 
+            (viewport.size.x / viewport.size.y) * IMAGE_RATIO_XY, 
+            0.01, 
+            100.0
+        );
         self
     }
 
