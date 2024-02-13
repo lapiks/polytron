@@ -1,11 +1,11 @@
 use glam::uvec2;
 use miniquad::EventHandler;
 
-use crate::{game::Game, graphics::Graphics, gui::Gui, renderer::{Renderer, RendererData}};
+use crate::{game::Game, graphics::Graphics, gui::Gui, inputs::Inputs, renderer::{Renderer, RendererData}};
 
 pub trait System {
     fn init(&mut self);
-    fn update(&mut self);
+    fn update(&mut self, inputs: &Inputs);
     fn draw(&self, g: &mut Graphics);
     fn mouse_motion(&mut self, x: f32, y: f32) {}
     fn mouse_wheel(&mut self, dx: f32, dy: f32) {}
@@ -22,6 +22,7 @@ pub struct Console {
     game: Game,
     game_init: bool,
     gui: Gui,
+    inputs: Inputs,
 }
 
 impl Console {
@@ -35,7 +36,8 @@ impl Console {
                     renderer: Renderer::new(),
                     game: Game::new(),
                     game_init: false,
-                    gui: Gui {}
+                    gui: Gui {},
+                    inputs: Inputs::new(),
                 }
             )
         });
@@ -49,7 +51,7 @@ impl EventHandler for Console {
             self.game_init = true;
         }
 
-        self.game.update();
+        self.game.update(&self.inputs);
     }
 
     fn draw(&mut self) {
@@ -104,6 +106,7 @@ impl EventHandler for Console {
     }
 
     fn key_down_event(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {
+        self.inputs.key_down_event(keycode);
         self.game.key_down(keycode, keymods, _repeat);
         self.renderer
         .egui_mq_mut()
@@ -111,6 +114,7 @@ impl EventHandler for Console {
     }
 
     fn key_up_event(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods) {
+        self.inputs.key_up_event(keycode);
         self.game.key_up(keycode, keymods);
         self.renderer
         .egui_mq_mut()

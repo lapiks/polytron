@@ -8,6 +8,7 @@ mod shapes;
 mod color;
 mod light;
 mod gui;
+mod inputs;
 
 use crate::console::Console;
 

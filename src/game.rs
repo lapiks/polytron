@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use glam::{vec2, vec3};
 
-use crate::{color::Color, console::System, graphics::{Camera2d, Camera3d, Graphics, Rect2d}, object::Object, time::TimeStep};
+use crate::{color::Color, console::System, graphics::{Camera2d, Camera3d, Graphics, Rect2d}, inputs::Inputs, object::Object, time::TimeStep};
 
 pub struct Game {
     time_step: TimeStep,
@@ -15,8 +15,7 @@ pub struct Game {
 impl Default for Game {
     fn default() -> Self {
         let camera_3d = Camera3d::new()
-        .with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)})
-        .with_background(Color::new(0.2, 0.2, 0.2, 0.2));
+        .with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)});
         let camera_2d = Camera2d::new()
         .with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)})
         .with_background(Color::new(0.1, 0.1, 0.1, 1.0));
@@ -43,11 +42,29 @@ impl System for Game {
         .scale(vec3(10.0, 10.0, 10.0));
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, inputs: &Inputs) {
         let dt = self.time_step.tick();
         self.cube
         .rotate_z((PI / 4.0) * dt)
         .rotate_y((PI / 4.0) * dt);
+
+        let dt = self.time_step.delta_time();
+        let speed = 5.0;
+        self.camera_3d.translate( 
+            if inputs.key(miniquad::KeyCode::W) {
+                vec3(0.0, 0.0, 1.0)
+            } else if inputs.key(miniquad::KeyCode::S) {
+                vec3(0.0, 0.0, -1.0)
+            } else if inputs.key(miniquad::KeyCode::D) {
+                vec3(1.0, 0.0, 0.0)
+            } else if inputs.key(miniquad::KeyCode::A) {
+                vec3(-1.0, 0.0, 0.0)
+            }else {
+                vec3(0.0, 0.0, 0.0)
+            }
+            * dt
+            * speed
+        );
     }
 
     fn draw(&self, g: &mut Graphics) {
@@ -78,18 +95,6 @@ impl System for Game {
     }
 
     fn key_down(&mut self, keycode: miniquad::KeyCode, keymods: miniquad::KeyMods, _repeat: bool) {
-        let dt = self.time_step.delta_time();
-        let speed = 5.0;
-        self.camera_3d.translate( 
-            match keycode {
-                miniquad::KeyCode::W => vec3(0.0, 0.0, 1.0),
-                miniquad::KeyCode::S => vec3(0.0, 0.0, -1.0),
-                miniquad::KeyCode::D => vec3(1.0, 0.0, 0.0),
-                miniquad::KeyCode::A => vec3(-1.0, 0.0, 0.0),
-                _ => vec3(0.0, 0.0, 0.0)
-            } 
-            * dt
-            * speed
-        );
+        
     }
 }
