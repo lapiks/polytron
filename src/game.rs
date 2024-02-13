@@ -14,10 +14,16 @@ pub struct Game {
 
 impl Default for Game {
     fn default() -> Self {
+        let camera_3d = Camera3d::new()
+        .with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)})
+        .with_background(Color::new(0.2, 0.2, 0.2, 0.2));
+        let camera_2d = Camera2d::new()
+        .with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)})
+        .with_background(Color::new(0.1, 0.1, 0.1, 1.0));
         Self { 
             time_step: Default::default(),
-            camera_3d: Camera3d::new().with_viewport(&Rect2d {position: vec2(0.0, 0.0), size: vec2(0.5, 1.0)}),
-            camera_2d: Camera2d::new().with_viewport(&Rect2d {position: vec2(0.5, 0.0), size: vec2(0.5, 1.0)}),
+            camera_3d,
+            camera_2d,
             cube: Object::new_cube(Color::red()),
             plane: Object::new_plane(Color::white()),
         }

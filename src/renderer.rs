@@ -2,7 +2,7 @@ use egui_miniquad::EguiMq;
 use glam::{uvec2, vec2, Mat4, UVec2};
 use miniquad::*;
 
-use crate::{graphics::{Rect2d, Vertex}, gui::Gui};
+use crate::{color::Color, graphics::{Rect2d, Vertex}, gui::Gui};
 
 const RESOLUTION: UVec2 = uvec2(320, 200);
 
@@ -25,6 +25,7 @@ pub struct RendererData {
     pub view_proj: Mat4,
     pub mode: Mode,
     pub viewport: Rect2d,
+    pub background: Color,
 }
 
 impl RendererData {
@@ -38,7 +39,8 @@ impl RendererData {
             viewport: Rect2d {
                 position: vec2(0.0, 0.0),
                 size: vec2(1.0, 1.0)
-            }
+            },
+            background: Color::black(),
         }
     }
 
@@ -55,6 +57,7 @@ pub struct DrawCall {
     pub primitive: Primitive,
     pub mode: Mode,
     pub viewport: Rect2d,
+    pub background: Color,
 }
 
 /// The console renderer
@@ -261,8 +264,12 @@ impl Renderer {
         // offscreen pass
         self.ctx.begin_pass(
             Some(self.offscreen_pass),
-            PassAction::clear_color(0.0, 0.0, 0.0, 1.0),
+            PassAction::clear_color(
+                0.0, 0.0, 0.0, 0.0
+            ),
         );
+
+        let mut previous_background = Color::black();
 
         for (draw, bindings) in data.draw_calls
             .iter()
@@ -287,12 +294,33 @@ impl Renderer {
             );
             self.ctx.apply_bindings(bindings);
             self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
+
+            self.ctx.apply_scissor_rect(
+                (draw.viewport.position.x * RESOLUTION.x as f32) as i32, 
+                (draw.viewport.position.y * RESOLUTION.y as f32) as i32,
+                (draw.viewport.size.x * RESOLUTION.x as f32) as i32, 
+                (draw.viewport.size.y * RESOLUTION.y as f32) as i32,
+            );
             self.ctx.apply_viewport(
                 (draw.viewport.position.x * RESOLUTION.x as f32) as i32, 
                 (draw.viewport.position.y * RESOLUTION.y as f32) as i32,
                 (draw.viewport.size.x * RESOLUTION.x as f32) as i32, 
                 (draw.viewport.size.y * RESOLUTION.y as f32) as i32,
             );
+            let background = draw.background;
+            if previous_background != background {
+                self.ctx.clear(
+                    Some((
+                        background.r,
+                        background.g,
+                        background.b,
+                        background.a    
+                    )),
+                    None, 
+                    None
+                );
+                previous_background = background;
+            }
             self.ctx.draw(0, draw.indices.len() as i32, 1);
         }
 

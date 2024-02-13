@@ -22,12 +22,14 @@ pub trait Camera {
     fn view_proj(&self) -> Mat4;
     fn mode(&self) -> Mode;
     fn viewport(&self) -> &Rect2d;
+    fn background(&self) -> Color;
 }
 
 pub struct Camera3d {
     transform: Mat4,
     projection: Mat4,
     viewport: Rect2d,
+    background: Color,
 }
 
 impl Camera for Camera3d {
@@ -42,6 +44,10 @@ impl Camera for Camera3d {
     fn viewport(&self) -> &Rect2d {
         &self.viewport
     }
+
+    fn background(&self) -> Color {
+        self.background
+    }
 }
 
 impl Camera3d {
@@ -55,12 +61,18 @@ impl Camera3d {
             viewport: Rect2d {
                 position: vec2(0.0, 0.0),
                 size: vec2(1.0, 1.0)
-            }
+            },
+            background: Color::black(),
         }
     }
 
     pub fn with_viewport(mut self, viewport: &Rect2d) -> Self {
         self.viewport = *viewport;
+        self
+    }
+
+    pub fn with_background(mut self, background: Color) -> Self {
+        self.background = background;
         self
     }
     
@@ -129,6 +141,7 @@ pub struct Camera2d {
     transform: Mat4,
     projection: Mat4,
     viewport: Rect2d,
+    background: Color,
 }
 
 impl Camera for Camera2d {
@@ -143,6 +156,10 @@ impl Camera for Camera2d {
     fn viewport(&self) -> &Rect2d {
         &self.viewport
     }
+
+    fn background(&self) -> Color {
+        self.background
+    }
 }
 
 impl Camera2d {
@@ -156,12 +173,18 @@ impl Camera2d {
             viewport: Rect2d {
                 position: vec2(0.0, 0.0),
                 size: vec2(1.0, 1.0)
-            }
+            },
+            background: Color::black(),
         }
     }
 
     pub fn with_viewport(mut self, viewport: &Rect2d) -> Self {
         self.viewport = *viewport;
+        self
+    }
+
+    pub fn with_background(mut self, background: Color) -> Self {
+        self.background = background;
         self
     }
 }
@@ -175,25 +198,20 @@ impl<'a> Graphics<'a> {
         self.data.view_proj = camera.view_proj();
         self.data.mode = camera.mode();
         self.data.viewport = *camera.viewport();
+        self.data.background = camera.background();
         self
     }
 
     pub fn draw_object(&mut self, object: &Object) -> &mut Self {
-        let mode = self.data.mode;
-        let viewport = self.data.viewport;
         self.new_draw_call(
             object.vertices(),
             object.indices(),
             object.transform(),
             Primitive::Triangles,
-            mode,
-            &viewport,
         )
     }
 
     pub fn draw_line(&mut self, p1: Vec3, p2: Vec3, color: Color) -> &mut Self {
-        let mode = self.data.mode;
-        let viewport = self.data.viewport;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -212,14 +230,10 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Lines,
-            mode,
-            &viewport,
         )
     }
 
     pub fn draw_rectangle(&mut self, position: Vec2, size: Vec2, color: Color) -> &mut Self {
-        let mode = self.data.mode;
-        let viewport = self.data.viewport;
         self.new_draw_call(
             &vec![
                 Vertex {
@@ -248,8 +262,6 @@ impl<'a> Graphics<'a> {
             ], 
             &Mat4::IDENTITY,
             Primitive::Triangles,
-            mode,
-            &viewport,
         )
     }
 
@@ -259,8 +271,6 @@ impl<'a> Graphics<'a> {
         indices: &Vec<i32>, 
         transform: &Mat4, 
         primitive: Primitive, 
-        mode: Mode,
-        viewport: &Rect2d,
     ) -> &mut Self {
         let previous_dc = if self.data.draw_calls_count == 0 {
             None
@@ -272,8 +282,8 @@ impl<'a> Graphics<'a> {
             draw_call.model != *transform ||
             draw_call.view_proj != self.data.view_proj ||
             draw_call.primitive != primitive ||
-            draw_call.mode != mode ||
-            draw_call.viewport != *viewport
+            draw_call.mode != self.data.mode ||
+            draw_call.viewport != self.data.viewport
         }) {
             // start a new draw call
             if self.data.draw_calls.len() <= self.data.draw_calls_count {
@@ -285,8 +295,9 @@ impl<'a> Graphics<'a> {
                         model: *transform,
                         view_proj: self.data.view_proj,
                         primitive,
-                        mode,
-                        viewport: *viewport,
+                        mode:  self.data.mode,
+                        viewport: self.data.viewport,
+                        background: self.data.background,
                     }
                 );
             } else {
@@ -296,8 +307,9 @@ impl<'a> Graphics<'a> {
                 self.data.draw_calls[self.data.draw_calls_count].model = *transform;
                 self.data.draw_calls[self.data.draw_calls_count].view_proj = self.data.view_proj;
                 self.data.draw_calls[self.data.draw_calls_count].primitive = primitive;
-                self.data.draw_calls[self.data.draw_calls_count].mode = mode;
-                self.data.draw_calls[self.data.draw_calls_count].viewport = *viewport;
+                self.data.draw_calls[self.data.draw_calls_count].mode = self.data.mode;
+                self.data.draw_calls[self.data.draw_calls_count].viewport = self.data.viewport;
+                self.data.draw_calls[self.data.draw_calls_count].background = self.data.background;
             }
     
             self.data.draw_calls_count += 1;
