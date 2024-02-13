@@ -1,3 +1,4 @@
+use glam::uvec2;
 use miniquad::EventHandler;
 
 use crate::{game::Game, graphics::Graphics, gui::Gui, renderer::{Renderer, RendererData}};
@@ -62,6 +63,10 @@ impl EventHandler for Console {
         self.renderer.draw(&mut self.data);
         //self.renderer.draw_ui(&mut self.gui);
         self.renderer.commit_frame();
+    }
+
+    fn resize_event(&mut self, _width: f32, _height: f32) {
+        self.renderer.set_screen_resolution(uvec2(_width as u32, _height as u32));
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {

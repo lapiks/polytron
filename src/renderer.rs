@@ -1,10 +1,10 @@
 use egui_miniquad::EguiMq;
-use glam::{uvec2, vec2, Mat4, UVec2};
+use glam::{uvec2, vec2, vec3, Mat4, UVec2};
 use miniquad::*;
 
 use crate::{color::Color, graphics::{Rect2d, Vertex}, gui::Gui};
 
-const RESOLUTION: UVec2 = uvec2(320, 200);
+const IMAGE_RES: UVec2 = uvec2(320, 200);
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Primitive {
@@ -62,6 +62,7 @@ pub struct DrawCall {
 
 /// The console renderer
 pub struct Renderer {
+    screen_res: UVec2,
     display_pipeline: Pipeline,
     display_bind: Bindings,
     pipelines: [Pipeline; 4],
@@ -80,16 +81,16 @@ impl Renderer {
         let mut ctx: Box<dyn RenderingBackend> = window::new_rendering_backend();
 
         let color_img = ctx.new_render_texture(TextureParams {
-            width: RESOLUTION.x,
-            height: RESOLUTION.y,
+            width: IMAGE_RES.x,
+            height: IMAGE_RES.y,
             format: TextureFormat::RGBA8,
             min_filter: FilterMode::Nearest,
             mag_filter: FilterMode::Nearest,
             ..Default::default()
         });
         let depth_img = ctx.new_render_texture(TextureParams {
-            width: RESOLUTION.x,
-            height: RESOLUTION.y,
+            width: IMAGE_RES.x,
+            height: IMAGE_RES.y,
             format: TextureFormat::Depth,
             ..Default::default()
         });
@@ -229,6 +230,7 @@ impl Renderer {
         );
 
         Renderer {
+            screen_res: IMAGE_RES,
             display_pipeline,
             display_bind,
             pipelines,
@@ -236,6 +238,10 @@ impl Renderer {
             egui_mq: egui_miniquad::EguiMq::new(&mut *ctx),
             ctx,
         }
+    }
+
+    pub fn set_screen_resolution(&mut self, screen_res: UVec2) {
+        self.screen_res = screen_res;
     }
 
     pub fn draw(&mut self, data: &mut RendererData) {
@@ -289,39 +295,39 @@ impl Renderer {
                     view_proj: draw.view_proj,
                 };
 
-            self.ctx.apply_pipeline(
-                &self.get_pipeline(draw.primitive, draw.mode)
-            );
-            self.ctx.apply_bindings(bindings);
-            self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
-
-            self.ctx.apply_scissor_rect(
-                (draw.viewport.position.x * RESOLUTION.x as f32) as i32, 
-                (draw.viewport.position.y * RESOLUTION.y as f32) as i32,
-                (draw.viewport.size.x * RESOLUTION.x as f32) as i32, 
-                (draw.viewport.size.y * RESOLUTION.y as f32) as i32,
-            );
-            self.ctx.apply_viewport(
-                (draw.viewport.position.x * RESOLUTION.x as f32) as i32, 
-                (draw.viewport.position.y * RESOLUTION.y as f32) as i32,
-                (draw.viewport.size.x * RESOLUTION.x as f32) as i32, 
-                (draw.viewport.size.y * RESOLUTION.y as f32) as i32,
-            );
-            let background = draw.background;
-            if previous_background != background {
-                self.ctx.clear(
-                    Some((
-                        background.r,
-                        background.g,
-                        background.b,
-                        background.a    
-                    )),
-                    None, 
-                    None
+                self.ctx.apply_pipeline(
+                    &self.get_pipeline(draw.primitive, draw.mode)
                 );
-                previous_background = background;
-            }
-            self.ctx.draw(0, draw.indices.len() as i32, 1);
+                self.ctx.apply_bindings(bindings);
+                self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
+
+                self.ctx.apply_scissor_rect(
+                    (draw.viewport.position.x * IMAGE_RES.x as f32) as i32, 
+                    (draw.viewport.position.y * IMAGE_RES.y as f32) as i32,
+                    (draw.viewport.size.x * IMAGE_RES.x as f32) as i32, 
+                    (draw.viewport.size.y * IMAGE_RES.y as f32) as i32,
+                );
+                self.ctx.apply_viewport(
+                    (draw.viewport.position.x * IMAGE_RES.x as f32) as i32, 
+                    (draw.viewport.position.y * IMAGE_RES.y as f32) as i32,
+                    (draw.viewport.size.x * IMAGE_RES.x as f32) as i32, 
+                    (draw.viewport.size.y * IMAGE_RES.y as f32) as i32,
+                );
+                let background = draw.background;
+                if previous_background != background {
+                    self.ctx.clear(
+                        Some((
+                            background.r,
+                            background.g,
+                            background.b,
+                            background.a    
+                        )),
+                        None, 
+                        None
+                    );
+                    previous_background = background;
+                }
+                self.ctx.draw(0, draw.indices.len() as i32, 1);
         }
 
         self.ctx.end_render_pass();
@@ -332,6 +338,23 @@ impl Renderer {
             self.ctx.begin_default_pass(Default::default());
             self.ctx.apply_pipeline(&self.display_pipeline);
             self.ctx.apply_bindings(&self.display_bind);
+            let scale = if self.screen_res.x > self.screen_res.y {
+                vec3(
+                    (self.screen_res.y as f32 / self.screen_res.x as f32) * (IMAGE_RES.x as f32 / IMAGE_RES.y as f32),
+                    1.0, 
+                    1.0
+                )
+            } else {
+                vec3(
+                    1.0,  
+                    (self.screen_res.x as f32 / self.screen_res.y as f32) * (IMAGE_RES.y as f32 / IMAGE_RES.x as f32),
+                    1.0
+                )
+            };
+            let vs_params = display_shader::Uniforms {
+                model: Mat4::from_scale(scale),
+            };
+            self.ctx.apply_uniforms(UniformsSource::table(&vs_params));
             self.ctx.draw(0, 6, 1);
             self.ctx.end_render_pass();
         }
@@ -470,6 +493,7 @@ mod shader_2d {
 }
 
 mod display_shader {
+    use glam::Mat4;
     use miniquad::*;
 
     pub const VERTEX: &str = r#"#version 140
@@ -478,8 +502,10 @@ mod display_shader {
 
     out lowp vec2 uv;
 
+    uniform mat4 model;
+
     void main() {
-        gl_Position = vec4(in_pos, 0.0, 1.0);
+        gl_Position = model * vec4(in_pos, 0.0, 1.0);
         uv = in_uv;
     }"#;
 
@@ -497,7 +523,16 @@ mod display_shader {
     pub fn meta() -> ShaderMeta {
         ShaderMeta {
             images: vec!["tex".to_string()],
-            uniforms: UniformBlockLayout { uniforms: vec![] },
+            uniforms: UniformBlockLayout { 
+                uniforms: vec![
+                    UniformDesc::new("model", UniformType::Mat4),
+                ] 
+            },
         }
+    }
+
+    #[repr(C)]
+    pub struct Uniforms {
+        pub model: Mat4,
     }
 }
