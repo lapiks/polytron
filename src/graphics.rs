@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use glam::{vec2, vec3, Mat4, Vec2, Vec3};
+use glam::{vec2, vec3, Mat4, Vec2, Vec3, Vec4Swizzles};
 
 use crate::{color::Color, object::Object, renderer::{DrawCall, Mode, Primitive, RendererData, IMAGE_RATIO_XY, IMAGE_RES}};
 
@@ -112,6 +112,11 @@ impl Camera3d {
         self
     }
 
+    pub fn set_transform(&mut self, mat: &Mat4) -> &mut Self {
+        self.transform = *mat;
+        self
+    }
+
     pub fn set_viewport(&mut self, viewport: &Rect2d) -> &mut Self {
         self.viewport = *viewport;
         self
@@ -140,6 +145,10 @@ impl Camera3d {
     pub fn scale(&mut self, scale: Vec3) -> &mut Self {
         self.transform *= Mat4::from_scale(scale);
         self
+    }
+
+    pub fn position(&self) -> Vec3 {
+        self.transform.w_axis.xyz()
     }
 }
 

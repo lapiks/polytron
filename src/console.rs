@@ -27,7 +27,10 @@ pub struct Console {
 
 impl Console {
     pub fn boot() {
-        let conf = miniquad::conf::Conf::default();
+        let conf = miniquad::conf::Conf {
+            fullscreen: true,
+            ..Default::default()
+        };
 
         miniquad::start(conf, move || {
             Box::new(
@@ -52,6 +55,7 @@ impl EventHandler for Console {
         }
 
         self.game.update(&self.inputs);
+        self.inputs.reset();
     }
 
     fn draw(&mut self) {
@@ -72,6 +76,7 @@ impl EventHandler for Console {
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
+        self.inputs.mouse_motion_event(x, y);
         self.game.mouse_motion(x, y);
         self.renderer
         .egui_mq_mut()
