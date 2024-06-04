@@ -1,2 +1,2 @@
 # polytron
-3D fantasy console
+A work in progress 3D fantasy console.
